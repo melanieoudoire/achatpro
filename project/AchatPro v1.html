@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AchatPro — Intelligence Achat</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --c-bg: #0a0a14;
+    --c-surface: #12121f;
+    --c-card: #181828;
+    --c-border: rgba(255,255,255,0.07);
+    --c-text: #f0f0ff;
+    --c-muted: rgba(240,240,255,0.45);
+    --c-violet: #7c3aed;
+    --c-indigo: #4f46e5;
+    --c-cyan: #06b6d4;
+    --c-emerald: #10b981;
+    --c-amber: #f59e0b;
+    --c-rose: #f43f5e;
+    --c-orange: #f97316;
+    --grad-main: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #06b6d4 100%);
+    --grad-accent: linear-gradient(135deg, #f97316, #f43f5e);
+    --grad-success: linear-gradient(135deg, #10b981, #06b6d4);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Animated background */
+  .bg-orbs {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    overflow: hidden;
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.18;
+    animation: floatOrb 20s ease-in-out infinite;
+  }
+  .orb-1 { width: 600px; height: 600px; background: var(--c-violet); top: -200px; left: -100px; animation-delay: 0s; }
+  .orb-2 { width: 400px; height: 400px; background: var(--c-cyan); bottom: -100px; right: -50px; animation-delay: -7s; }
+  .orb-3 { width: 300px; height: 300px; background: var(--c-rose); top: 50%; left: 50%; animation-delay: -14s; }
+
+  @keyframes floatOrb {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -30px) scale(1.05); }
+    66% { transform: translate(-20px, 20px) scale(0.95); }
+  }
+
+  /* Layout */
+  #root { position: relative; z-index: 1; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--c-border);
+    background: rgba(10,10,20,0.8);
+    backdrop-filter: blur(20px);
+    flex-shrink: 0;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    background: var(--grad-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+  }
+  .logo span {
+    font-weight: 400;
+    opacity: 0.7;
+    font-size: 13px;
+    display: block;
+    -webkit-text-fill-color: rgba(240,240,255,0.45);
+    background: none;
+    letter-spacing: 0.5px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .badge-beta {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(6,182,212,0.3));
+    border: 1px solid rgba(124,58,237,0.4);
+    color: #a78bfa;
+  }
+
+  /* Pipeline */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 12px 28px;
+    background: rgba(18,18,31,0.6);
+    border-bottom: 1px solid var(--c-border);
+    overflow-x: auto;
+    flex-shrink: 0;
+    scrollbar-width: none;
+  }
+  .pipeline::-webkit-scrollbar { display: none; }
+
+  .pipeline-step {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .step-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-radius: 30px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .step-inner:hover { background: rgba(255,255,255,0.05); }
+  .step-inner.active {
+    background: rgba(124,58,237,0.15);
+    border-color: rgba(124,58,237,0.4);
+  }
+  .step-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-num.active { background: var(--grad-main); color: white; }
+  .step-num.done { background: var(--grad-success); color: white; }
+  .step-num.idle { background: rgba(255,255,255,0.08); color: var(--c-muted); }
+  .step-label {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .step-label.active { color: #a78bfa; }
+  .step-label.idle { color: var(--c-muted); }
+  .step-arrow {
+    color: rgba(255,255,255,0.15);
+    font-size: 14px;
+    padding: 0 4px;
+  }
+
+  /* Main content */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  /* Left panel */
+  .left-panel {
+    width: 340px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--c-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: rgba(18,18,31,0.4);
+  }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--c-muted);
+    padding: 16px 20px 8px;
+  }
+
+  /* Drop zone */
+  .drop-zone {
+    margin: 0 16px 16px;
+    border: 2px dashed rgba(124,58,237,0.35);
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: rgba(124,58,237,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .drop-zone:hover, .drop-zone.dragging {
+    border-color: rgba(124,58,237,0.7);
+    background: rgba(124,58,237,0.1);
+    transform: scale(1.01);
+  }
+  .drop-zone.dragging {
+    box-shadow: 0 0 40px rgba(124,58,237,0.3);
+  }
+  .drop-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    display: block;
+    animation: pulse-icon 2s ease-in-out infinite;
+  }
+  @keyframes pulse-icon {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .drop-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--c-text);
+    margin-bottom: 6px;
+  }
+  .drop-sub {
+    font-size: 11px;
+    color: var(--c-muted);
+    line-height: 1.5;
+  }
+  .drop-formats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .fmt-chip {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--c-muted);
+  }
+
+  /* Loaded file */
+  .file-loaded {
+    margin: 0 16px 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.25);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .file-icon-wrap {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .file-info { flex: 1; min-width: 0; }
+  .file-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .file-type-tag {
+    font-size: 10px;
+    color: var(--c-emerald);
+    margin-top: 2px;
+  }
+  .file-remove {
+    background: none;
+    border: none;
+    color: var(--c-muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px;
+    transition: color 0.15s;
+  }
+  .file-remove:hover { color: var(--c-rose); }
+
+  /* Action buttons */
+  .actions-section {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 16px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+  }
+  .action-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--c-muted);
+    margin: 12px 0 8px;
+  }
+  .action-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 13px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--c-border);
+    background: var(--c-card);
+    color: var(--c-text);
+    cursor: pointer;
+    margin-bottom: 6px;
+    transition: all 0.2s;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .action-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--btn-grad, var(--grad-main));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .action-btn:hover::before { opacity: 0.08; }
+  .action-btn:hover { border-color: rgba(124,58,237,0.4); transform: translateX(2px); }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .action-btn.loading { opacity: 0.7; pointer-events: none; }
+  .action-btn.active-btn {
+    border-color: rgba(124,58,237,0.6);
+    background: rgba(124,58,237,0.1);
+  }
+  .btn-emoji { font-size: 18px; flex-shrink: 0; position: relative; z-index: 1; }
+  .btn-content { flex: 1; position: relative; z-index: 1; }
+  .btn-label { font-size: 12px; font-weight: 600; display: block; }
+  .btn-desc { font-size: 10px; color: var(--c-muted); margin-top: 1px; display: block; }
+  .btn-arrow { color: var(--c-muted); font-size: 12px; position: relative; z-index: 1; }
+
+  /* Right panel - workspace */
+  .workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .workspace-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px 0;
+    flex-shrink: 0;
+  }
+  .workspace-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .workspace-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .ws-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--c-border);
+    background: var(--c-card);
+    color: var(--c-text);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ws-btn:hover { border-color: rgba(124,58,237,0.5); background: rgba(124,58,237,0.1); }
+  .ws-btn.primary {
+    background: var(--grad-main);
+    border: none;
+    color: white;
+  }
+  .ws-btn.primary:hover { opacity: 0.9; transform: scale(1.02); }
+
+  /* Result area */
+  .result-area {
+    flex: 1;
+    margin: 12px 24px 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--c-border);
+    background: var(--c-card);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .result-placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--c-muted);
+    padding: 40px;
+  }
+  .placeholder-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+    max-width: 600px;
+    width: 100%;
+  }
+  .placeholder-card {
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--c-border);
+    background: rgba(255,255,255,0.02);
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .placeholder-card:hover {
+    border-color: rgba(124,58,237,0.4);
+    background: rgba(124,58,237,0.05);
+    transform: translateY(-2px);
+  }
+  .placeholder-card .emoji { font-size: 24px; margin-bottom: 8px; display: block; }
+  .placeholder-card .label { font-size: 11px; font-weight: 600; color: var(--c-text); margin-bottom: 4px; }
+  .placeholder-card .desc { font-size: 10px; color: var(--c-muted); line-height: 1.4; }
+
+  /* Result content */
+  .result-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+  }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .result-icon-wrap {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .result-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .result-subtitle {
+    font-size: 11px;
+    color: var(--c-muted);
+    margin-top: 2px;
+  }
+
+  /* Markdown-like result formatting */
+  .result-body { line-height: 1.7; }
+  .result-body h1, .result-body h2, .result-body h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    margin: 20px 0 10px;
+    color: var(--c-text);
+  }
+  .result-body h1 { font-size: 18px; }
+  .result-body h2 { font-size: 15px; color: #a78bfa; }
+  .result-body h3 { font-size: 13px; }
+  .result-body p { font-size: 13px; color: rgba(240,240,255,0.85); margin-bottom: 12px; }
+  .result-body ul, .result-body ol {
+    margin: 8px 0 14px 20px;
+    font-size: 13px;
+    color: rgba(240,240,255,0.85);
+  }
+  .result-body li { margin-bottom: 6px; line-height: 1.6; }
+  .result-body strong { color: var(--c-text); font-weight: 600; }
+  .result-body em { color: #a78bfa; font-style: normal; font-weight: 500; }
+
+  /* Score card */
+  .score-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--c-border);
+    background: rgba(255,255,255,0.02);
+    margin-bottom: 12px;
+  }
+  .score-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 36px;
+    background: var(--grad-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+  .score-bar-wrap { flex: 1; }
+  .score-bar-track {
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: var(--grad-main);
+    transition: width 1s ease;
+  }
+
+  /* Tags */
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+  .tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+  .tag-risk { background: rgba(244,63,94,0.15); color: #fb7185; border: 1px solid rgba(244,63,94,0.25); }
+  .tag-ok { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+  .tag-warn { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+  .tag-info { background: rgba(79,70,229,0.15); color: #a78bfa; border: 1px solid rgba(79,70,229,0.25); }
+
+  /* Loading state */
+  .loading-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  .loading-ring {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.06);
+    border-top-color: #7c3aed;
+    border-right-color: #06b6d4;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--c-muted);
+  }
+  .loading-dots span {
+    display: inline-block;
+    animation: blink 1.4s infinite;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: 0; } 40% { opacity: 1; } }
+
+  /* Tooltip */
+  .tooltip-wrap { position: relative; }
+  .tooltip-content {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e1e3a;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 10px;
+    white-space: nowrap;
+    color: var(--c-text);
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Stage indicator */
+  .stage-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--c-muted);
+  }
+  .stage-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--c-emerald);
+    animation: pulseDot 2s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+  }
+
+  /* History */
+  .history-bar {
+    padding: 0 16px 8px;
+    flex-shrink: 0;
+    border-top: 1px solid var(--c-border);
+    background: rgba(10,10,20,0.5);
+  }
+  .history-title { font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--c-muted); padding: 8px 0 6px; }
+  .history-list { display: flex; flex-direction: column; gap: 3px; }
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .history-item:hover { background: rgba(255,255,255,0.04); }
+  .history-item-icon { font-size: 12px; }
+  .history-item-label { font-size: 10px; color: var(--c-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-item-time { font-size: 9px; color: rgba(255,255,255,0.2); }
+
+  /* Notification toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1e1e3a;
+    border: 1px solid rgba(124,58,237,0.4);
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-text);
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Responsive table */
+  .r-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; }
+  .r-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: rgba(124,58,237,0.1);
+    color: #a78bfa;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .r-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: rgba(240,240,255,0.8);
+    vertical-align: top;
+  }
+  .r-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Checklist */
+  .checklist { list-style: none; margin: 10px 0 14px; padding: 0; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+  }
+  .check-box {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .check-box.unchecked { border: 1.5px solid rgba(255,255,255,0.2); }
+  .check-box.unchecked:hover { border-color: #7c3aed; background: rgba(124,58,237,0.1); }
+  .check-box.checked { background: var(--grad-success); color: white; }
+
+  /* Copy button */
+  .copy-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--c-border);
+    color: var(--c-muted);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+  .copy-btn:hover { color: var(--c-text); border-color: rgba(124,58,237,0.4); }
+
+  /* Type-tabs dans results */
+  .rtab-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .rtab {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--c-border);
+    transition: all 0.15s;
+    color: var(--c-muted);
+    background: transparent;
+  }
+  .rtab.active { background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.5); color: #a78bfa; }
+  .rtab:hover:not(.active) { border-color: rgba(255,255,255,0.15); color: var(--c-text); }
+</style>
+</head>
+<body>
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useCallback, useEffect } = React;
+
+// ─── Data ───────────────────────────────────────────────────────────────────
+
+const PIPELINE_STEPS = [
+  { id: 'sourcing', label: 'Sourcing', emoji: '🔍' },
+  { id: 'rfp', label: 'Appel d\'offres', emoji: '📋' },
+  { id: 'analyse', label: 'Analyse offres', emoji: '📊' },
+  { id: 'nego', label: 'Négociation', emoji: '🤝' },
+  { id: 'contrat', label: 'Contractualisation', emoji: '✍️' },
+  { id: 'suivi', label: 'Suivi', emoji: '📦' },
+  { id: 'eval', label: 'Évaluation', emoji: '⭐' },
+  { id: 'reporting', label: 'Reporting', emoji: '📈' },
+];
+
+const DOC_TYPES = {
+  cdc: { label: 'Cahier des charges', emoji: '📄', color: '#7c3aed' },
+  offre: { label: 'Offre fournisseur', emoji: '💼', color: '#4f46e5' },
+  contrat: { label: 'Contrat', emoji: '✍️', color: '#0891b2' },
+  facture: { label: 'Facture', emoji: '🧾', color: '#059669' },
+  bc: { label: 'Bon de commande', emoji: '🛒', color: '#d97706' },
+  tableau: { label: 'Tableau comparatif', emoji: '📊', color: '#db2777' },
+  email: { label: 'Email fournisseur', emoji: '✉️', color: '#7c3aed' },
+  audit: { label: 'Rapport d\'audit', emoji: '🔍', color: '#dc2626' },
+  devis: { label: 'Devis', emoji: '💰', color: '#16a34a' },
+  autre: { label: 'Document', emoji: '📁', color: '#6b7280' },
+};
+
+const ACTION_GROUPS = [
+  {
+    label: 'Analyse rapide',
+    actions: [
+      { id: 'resume', emoji: '⚡', label: 'Résumé synthétique', desc: 'Points clés en 5 bullets', color: '#7c3aed' },
+      { id: 'risques', emoji: '🚨', label: 'Détection des risques', desc: 'Risques contractuels & opérationnels', color: '#f43f5e' },
+      { id: 'checklist', emoji: '✅', label: 'Checklist de validation', desc: 'Points à vérifier avant validation', color: '#10b981' },
+    ]
+  },
+  {
+    label: 'Évaluation fournisseur',
+    actions: [
+      { id: 'score', emoji: '⭐', label: 'Score fournisseur', desc: 'Notation multicritère automatique', color: '#f59e0b' },
+      { id: 'comparatif', emoji: '📊', label: 'Tableau comparatif', desc: 'Synthèse comparative structurée', color: '#4f46e5' },
+      { id: 'recommandation', emoji: '🎯', label: 'Recommandation d\'action', desc: 'Décision suggérée et next steps', color: '#06b6d4' },
+    ]
+  },
+  {
+    label: 'Négociation & Communication',
+    actions: [
+      { id: 'nego', emoji: '🤝', label: 'Points de négociation', desc: 'Leviers & arguments clés', color: '#f97316' },
+      { id: 'email', emoji: '✉️', label: 'Email de réponse', desc: 'Rédaction d\'email professionnel', color: '#7c3aed' },
+      { id: 'clauses', emoji: '📝', label: 'Analyse contractuelle', desc: 'Clauses sensibles & pénalités', color: '#dc2626' },
+    ]
+  },
+];
+
+const PROMPTS = {
+  resume: (docType, content) => `Tu es un expert achat senior. Analyse ce document (${docType}) et produis un RÉSUMÉ SYNTHÉTIQUE structuré en français.
+
+Document:
+"""
+${content}
+"""
+
+Réponds OBLIGATOIREMENT avec cette structure exacte:
+
+## Résumé exécutif
+[2-3 phrases qui capturent l'essentiel]
+
+## Points clés
+- [Point 1 critique]
+- [Point 2 critique]
+- [Point 3 critique]
+- [Point 4 critique]
+- [Point 5 critique]
+
+## Informations chiffrées importantes
+[Montants, délais, quantités, dates]
+
+## Ce qui nécessite attention immédiate
+[1-2 éléments urgents ou sensibles]
+
+Sois précis, factuel, orienté décision.`,
+
+  risques: (docType, content) => `Tu es un expert en gestion des risques achats. Analyse ce document (${docType}) et identifie tous les risques.
+
+Document:
+"""
+${content}
+"""
+
+Structure ta réponse ainsi:
+
+## 🔴 Risques critiques
+[Risques pouvant bloquer ou causer pertes importantes]
+
+## 🟡 Points de vigilance
+[Éléments à surveiller de près]
+
+## 🟢 Points positifs
+[Ce qui protège bien nos intérêts]
+
+## Risques juridiques & contractuels
+[Clauses problématiques, manques]
+
+## Risques opérationnels
+[Délais, qualité, dépendance fournisseur]
+
+## Actions correctives suggérées
+[Recommandations concrètes]`,
+
+  checklist: (docType, content) => `Tu es un acheteur expert. Crée une checklist de validation complète pour ce document (${docType}).
+
+Document:
+"""
+${content}
+"""
+
+Génère une checklist structurée en français avec les items ESSENTIELS à vérifier avant validation/signature. Format:
+
+## Checklist — ${docType}
+
+### Conformité administrative
+- [ ] Item
+- [ ] Item
+
+### Conditions commerciales
+- [ ] Item
+- [ ] Item
+
+### Conditions juridiques
+- [ ] Item
+- [ ] Item
+
+### Conditions techniques / opérationnelles
+- [ ] Item
+- [ ] Item
+
+### Due diligence fournisseur
+- [ ] Item
+- [ ] Item
+
+Sois exhaustif et pragmatique. 15 à 25 items au total.`,
+
+  score: (docType, content) => `Tu es un acheteur expert en évaluation fournisseurs. Note ce document/fournisseur (${docType}) selon les critères achat standards.
+
+Document:
+"""
+${content}
+"""
+
+Réponds en français avec cette structure:
+
+## Score Global: [X/100]
+[Commentaire en 1 phrase]
+
+## Détail des critères
+
+| Critère | Note /20 | Commentaire |
+|---------|----------|-------------|
+| Prix & conditions financières | /20 | |
+| Qualité & conformité | /20 | |
+| Délais & réactivité | /20 | |
+| Solidité & références | /20 | |
+| Durabilité & RSE | /20 | |
+
+## Verdict
+[RECOMMANDÉ / ACCEPTABLE / À RETRAVAILLER / ÉLIMINÉ]
+
+## Justification
+[3-4 phrases expliquant le verdict]`,
+
+  comparatif: (docType, content) => `Tu es un acheteur senior. Crée un tableau comparatif structuré à partir de ce document (${docType}).
+
+Document:
+"""
+${content}
+"""
+
+Génère un tableau comparatif en français avec:
+
+## Tableau comparatif — Synthèse
+
+| Critère | Détail | Évaluation |
+|---------|--------|------------|
+| ... | ... | ✅/⚠️/❌ |
+
+## Points différenciants
+[Ce qui distingue vraiment cette offre]
+
+## Gap analysis
+[Ce qui manque ou devrait être négocié]
+
+## Position de négociation
+[Où on a du levier]`,
+
+  recommandation: (docType, content) => `Tu es un directeur achat. Donne une recommandation d'action claire sur ce document (${docType}).
+
+Document:
+"""
+${content}
+"""
+
+Structure en français:
+
+## Décision recommandée
+**[VALIDER / NÉGOCIER / REJETER / METTRE EN ATTENTE]**
+
+## Justification (3 arguments)
+1. [Premier argument]
+2. [Deuxième argument]
+3. [Troisième argument]
+
+## Plan d'action
+| Étape | Action | Responsable | Délai |
+|-------|--------|-------------|-------|
+| 1 | | | |
+| 2 | | | |
+| 3 | | | |
+
+## Conditions de validation
+[Ce qui doit changer ou être confirmé pour valider]
+
+## Risque si on ne fait rien
+[Conséquences d'une non-décision]`,
+
+  nego: (docType, content) => `Tu es un négociateur achat expert. Prépare une stratégie de négociation à partir de ce document (${docType}).
+
+Document:
+"""
+${content}
+"""
+
+En français:
+
+## Contexte de négociation
+[Situation, enjeux, rapport de force]
+
+## Nos objectifs
+- Objectif idéal: [...]
+- Objectif acceptable: [...]
+- Ligne rouge: [...]
+
+## Leviers de négociation
+🎯 **Levier 1:** [...]
+🎯 **Levier 2:** [...]
+🎯 **Levier 3:** [...]
+
+## Arguments à préparer
+[Arguments par thème]
+
+## Concessions possibles de notre côté
+[Ce qu'on peut lâcher]
+
+## Séquence de négociation suggérée
+1. Ouvrir sur...
+2. Puis aborder...
+3. Conclure sur...
+
+## Phrases d'accroche
+> "[Citation d'ouverture]"
+> "[Citation si blocage]"`,
+
+  email: (docType, content) => `Tu es un acheteur professionnel. Rédige un email professionnel en réponse ou en lien avec ce document (${docType}).
+
+Document:
+"""
+${content}
+"""
+
+Génère un email professionnel en français:
+
+---
+**Objet:** [Objet clair et professionnel]
+
+Madame, Monsieur,
+
+[Corps de l'email — 3 à 4 paragraphes professionnels, ton assertif mais respectueux, orienté résultat]
+
+[Conclusion et call-to-action]
+
+Cordialement,
+[Prénom Nom]
+Direction Achats
+
+---
+
+## Version alternative (ton plus direct)
+[Deuxième version plus concise et directe]`,
+
+  clauses: (docType, content) => `Tu es un juriste achat. Analyse les clauses contractuelles de ce document (${docType}).
+
+Document:
+"""
+${content}
+"""
+
+En français:
+
+## Clauses favorables (à conserver)
+[Clauses qui protègent nos intérêts]
+
+## Clauses à renégocier
+| Clause | Problème | Rédaction suggérée |
+|--------|----------|-------------------|
+| ... | ... | ... |
+
+## Clauses manquantes à ajouter
+- [Clause manquante 1]
+- [Clause manquante 2]
+
+## Clauses pièges / risques juridiques
+⚠️ [Clause problématique + explication]
+
+## Pénalités & responsabilités
+[Analyse du régime des pénalités]
+
+## Recommandation contractuelle
+[Action recommandée]`,
+};
+
+const QUICK_DEMO_MESSAGES = [
+  { step: 'sourcing', msg: 'Sourcing: trouvez les meilleurs fournisseurs' },
+  { step: 'rfp', msg: 'Appel d\'offres: structurez votre consultation' },
+  { step: 'analyse', msg: 'Analyse: comparez les offres efficacement' },
+  { step: 'nego', msg: 'Négociation: préparez vos arguments' },
+];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function detectDocType(filename, content) {
+  const name = (filename || '').toLowerCase();
+  const text = (content || '').toLowerCase();
+  if (name.includes('cdc') || name.includes('cahier') || text.includes('cahier des charges')) return 'cdc';
+  if (name.includes('contrat') || text.includes('contrat')) return 'contrat';
+  if (name.includes('facture') || text.includes('facture n°') || text.includes('invoice')) return 'facture';
+  if (name.includes('devis') || text.includes('devis n°')) return 'devis';
+  if (name.includes('bon de commande') || name.includes(' bc ') || text.includes('bon de commande')) return 'bc';
+  if (name.includes('audit') || text.includes('rapport d\'audit')) return 'audit';
+  if (name.includes('email') || name.includes('mail') || text.includes('objet:') || text.includes('cordialement')) return 'email';
+  if (name.includes('tableau') || name.includes('comparatif') || text.includes('comparatif')) return 'tableau';
+  if (text.includes('offre') || text.includes('proposition commerciale')) return 'offre';
+  return 'autre';
+}
+
+function formatMarkdown(text) {
+  // Simple markdown-to-HTML
+  let html = text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^(\| .+)$/gm, (m) => m)
+    .replace(/^- \[ \] (.+)$/gm, '[[UNCHECKED]]$1')
+    .replace(/^- \[x\] (.+)$/gm, '[[CHECKED]]$1')
+    .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`)
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(?!<[hbuolp])/gm, '');
+
+  // Handle tables
+  html = html.replace(/(\|.+\|\n?)+/g, (tableBlock) => {
+    const rows = tableBlock.trim().split('\n').filter(r => r.includes('|') && !r.match(/^\|[-: |]+\|$/));
+    if (rows.length === 0) return tableBlock;
+    let tableHtml = '<table class="r-table">';
+    rows.forEach((row, i) => {
+      const cells = row.split('|').filter(c => c.trim() !== '');
+      const tag = i === 0 ? 'th' : 'td';
+      tableHtml += '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+    });
+    tableHtml += '</table>';
+    return tableHtml;
+  });
+
+  return html;
+}
+
+// ─── Components ─────────────────────────────────────────────────────────────
+
+function ChecklistResult({ text }) {
+  const [checked, setChecked] = useState({});
+  const items = [];
+  text.split('\n').forEach(line => {
+    const uncheckedMatch = line.match(/^- \[ \] (.+)/);
+    const checkedMatch = line.match(/^- \[x\] (.+)/);
+    if (uncheckedMatch) items.push({ id: items.length, label: uncheckedMatch[1], init: false });
+    else if (checkedMatch) items.push({ id: items.length, label: checkedMatch[1], init: true });
+  });
+
+  if (items.length === 0) return <div className="result-body" dangerouslySetInnerHTML={{ __html: formatMarkdown(text) }} />;
+
+  const done = Object.values(checked).filter(Boolean).length + items.filter(i => i.init && !checked.hasOwnProperty(i.id)).length;
+  const total = items.length;
+
+  return (
+    <div>
+      <div className="score-card" style={{ marginBottom: 16 }}>
+        <div>
+          <div style={{ fontSize: 11, color: 'var(--c-muted)', marginBottom: 4 }}>Progression</div>
+          <div className="score-num">{done}/{total}</div>
+        </div>
+        <div className="score-bar-wrap">
+          <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>Points validés</div>
+          <div className="score-bar-track">
+            <div className="score-bar-fill" style={{ width: `${(done/total)*100}%` }} />
+          </div>
+        </div>
+      </div>
+      <ul className="checklist">
+        {items.map(item => {
+          const isChecked = checked.hasOwnProperty(item.id) ? checked[item.id] : item.init;
+          return (
+            <li key={item.id}>
+              <div
+                className={`check-box ${isChecked ? 'checked' : 'unchecked'}`}
+                onClick={() => setChecked(p => ({ ...p, [item.id]: !isChecked }))}
+              >
+                {isChecked ? '✓' : ''}
+              </div>
+              <span style={{ color: isChecked ? 'var(--c-muted)' : 'rgba(240,240,255,0.85)', textDecoration: isChecked ? 'line-through' : 'none', fontSize: 12, lineHeight: 1.5 }}>{item.label}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function ResultContent({ result, action, docType }) {
+  const copyText = () => {
+    navigator.clipboard?.writeText(result.text).catch(() => {});
+  };
+
+  const actionInfo = ACTION_GROUPS.flatMap(g => g.actions).find(a => a.id === action) || {};
+  const docInfo = DOC_TYPES[docType] || DOC_TYPES.autre;
+
+  return (
+    <div className="result-content">
+      <div className="result-header">
+        <div className="result-icon-wrap" style={{ background: `${actionInfo.color || '#7c3aed'}22` }}>
+          <span>{actionInfo.emoji || '📄'}</span>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div className="result-title">{actionInfo.label}</div>
+          <div className="result-subtitle">
+            {docInfo.emoji} {docInfo.label} · Analysé par AchatPro IA
+          </div>
+        </div>
+        <button className="copy-btn" onClick={copyText}>📋 Copier</button>
+      </div>
+
+      {action === 'checklist'
+        ? <ChecklistResult text={result.text} />
+        : <div className="result-body" dangerouslySetInnerHTML={{ __html: `<p>${formatMarkdown(result.text)}</p>` }} />
+      }
+    </div>
+  );
+}
+
+function Placeholder({ onDemoClick }) {
+  const demos = [
+    { emoji: '📊', label: 'Score fournisseur', desc: 'Déposez une offre pour une notation multicritère instantanée' },
+    { emoji: '🚨', label: 'Détection des risques', desc: 'Identifiez les clauses dangereuses dans vos contrats' },
+    { emoji: '🤝', label: 'Stratégie de négociation', desc: 'Préparez vos leviers avant chaque rendez-vous' },
+    { emoji: '✅', label: 'Checklist de validation', desc: 'Ne ratez plus aucun point critique' },
+    { emoji: '✉️', label: 'Email professionnel', desc: 'Réponses rédigées en quelques secondes' },
+    { emoji: '🎯', label: 'Recommandation d\'action', desc: 'Décisions claires, argumentées, actionnables' },
+  ];
+  return (
+    <div className="result-placeholder">
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>🗂️</div>
+        <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 18, color: 'var(--c-text)', marginBottom: 8 }}>
+          Glissez un document pour commencer
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--c-muted)', maxWidth: 380, lineHeight: 1.6 }}>
+          Déposez n'importe quel document achat dans la zone à gauche, puis choisissez une action.
+        </div>
+      </div>
+      <div className="placeholder-grid">
+        {demos.map((d, i) => (
+          <div key={i} className="placeholder-card" onClick={() => onDemoClick(d.label)}>
+            <span className="emoji">{d.emoji}</span>
+            <div className="label">{d.label}</div>
+            <div className="desc">{d.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main App ────────────────────────────────────────────────────────────────
+
+function AchatPro() {
+  const [activeStep, setActiveStep] = useState('analyse');
+  const [isDragging, setIsDragging] = useState(false);
+  const [file, setFile] = useState(null); // { name, type, content }
+  const [docType, setDocType] = useState(null);
+  const [result, setResult] = useState(null); // { text }
+  const [loading, setLoading] = useState(false);
+  const [activeAction, setActiveAction] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [toast, setToast] = useState({ msg: '', visible: false });
+  const [loadingMsg, setLoadingMsg] = useState('Analyse en cours');
+  const fileInputRef = useRef();
+  const toastTimerRef = useRef();
+
+  const { useTweaks, TweaksPanel, TweakSection, TweakToggle, TweakColor, TweakRadio } = window;
+  const [tweaks, setTweak] = useTweaks(/*EDITMODE-BEGIN*/{
+    "accentColor": "#7c3aed",
+    "showHistory": true,
+    "compactMode": false,
+    "animatedBg": true
+  }/*EDITMODE-END*/);
+
+  const showToast = useCallback((msg, emoji = '✅') => {
+    clearTimeout(toastTimerRef.current);
+    setToast({ msg: `${emoji} ${msg}`, visible: true });
+    toastTimerRef.current = setTimeout(() => setToast(t => ({ ...t, visible: false })), 3000);
+  }, []);
+
+  const loadMessages = [
+    'Analyse en cours', 'Lecture du document', 'Extraction des données clés',
+    'Application des règles métier', 'Génération de la réponse', 'Finalisation'
+  ];
+
+  const runAction = useCallback(async (actionId) => {
+    if (!file) { showToast('Déposez d\'abord un document', '⚠️'); return; }
+    setActiveAction(actionId);
+    setLoading(true);
+    setResult(null);
+
+    let msgIdx = 0;
+    setLoadingMsg(loadMessages[0]);
+    const msgInterval = setInterval(() => {
+      msgIdx = (msgIdx + 1) % loadMessages.length;
+      setLoadingMsg(loadMessages[msgIdx]);
+    }, 1800);
+
+    const docInfo = DOC_TYPES[docType] || DOC_TYPES.autre;
+    const promptFn = PROMPTS[actionId];
+    const prompt = promptFn ? promptFn(docInfo.label, file.content) : `Analyse ce document achat: ${file.content}`;
+
+    try {
+      const text = await window.claude.complete({
+        messages: [{ role: 'user', content: prompt }]
+      });
+      clearInterval(msgInterval);
+      setResult({ text });
+      const actionInfo = ACTION_GROUPS.flatMap(g => g.actions).find(a => a.id === actionId);
+      setHistory(h => [{ id: Date.now(), emoji: actionInfo?.emoji || '📄', label: `${actionInfo?.label} — ${file.name}`, time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }), result: { text }, action: actionId, docType }, ...h.slice(0, 9)]);
+      showToast('Analyse terminée');
+    } catch (e) {
+      clearInterval(msgInterval);
+      setResult({ text: `## Erreur\n\nUne erreur est survenue lors de l'analyse. Veuillez réessayer.\n\n_Détail: ${e.message}_` });
+    }
+    setLoading(false);
+  }, [file, docType, showToast]);
+
+  const handleFileContent = useCallback((name, content) => {
+    const type = detectDocType(name, content);
+    setFile({ name, content, type });
+    setDocType(type);
+    setResult(null);
+    setActiveAction(null);
+    showToast(`Document chargé : ${DOC_TYPES[type].label}`, DOC_TYPES[type].emoji);
+    // Auto-detect pipeline step
+    const stepMap = { cdc: 'rfp', offre: 'analyse', contrat: 'contrat', facture: 'suivi', bc: 'suivi', devis: 'analyse', audit: 'eval', email: 'nego' };
+    if (stepMap[type]) setActiveStep(stepMap[type]);
+  }, [showToast]);
+
+  const onDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const f = e.dataTransfer?.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => handleFileContent(f.name, ev.target.result || f.name);
+    reader.readAsText(f);
+  }, [handleFileContent]);
+
+  const onFileChange = useCallback((e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => handleFileContent(f.name, ev.target.result || f.name);
+    reader.readAsText(f);
+  }, [handleFileContent]);
+
+  const useDemoDoc = useCallback(() => {
+    const demos = {
+      cdc: `CAHIER DES CHARGES — Fourniture d'équipements de protection individuelle (EPI)\nEmetteur: Direction Achat Industrielle\nDate: Avril 2026\n\nOBJET: Fourniture de 500 équipements de protection individuelle de type gants anti-coupures, lunettes de protection et casques de chantier.\n\nSPÉCIFICATIONS TECHNIQUES:\n- Gants: norme EN388, niveau de résistance 4544, taille M et L en quantités égales\n- Lunettes: norme EN166, anti-rayures, traitement anti-buée\n- Casques: norme EN397, classe E, couleur jaune et orange\n\nCONDITIONS:\n- Délai de livraison maximum: 3 semaines\n- Garantie minimum: 1 an\n- Budget prévisionnel: 45 000€ HT\n- Paiement: 60 jours fin de mois\n\nCRITÈRES D'ÉVALUATION:\n- Prix 40%, Qualité 35%, Délai 15%, Démarche RSE 10%`,
+      offre: `PROPOSITION COMMERCIALE — ProtecSafe Solutions\nRef: PS-2026-0412\nDate: 25 avril 2026\nClient: Direction Achat — Votre Entreprise\n\nFOURNITURE EPI:\n- Gants anti-coupures EN388 niveau 4544: 250 paires taille M + 250 paires taille L = 500 paires\n  Prix unitaire: 12,50€ HT → Total: 6 250€ HT\n- Lunettes EN166 anti-rayures anti-buée: 300 unités\n  Prix unitaire: 8,90€ HT → Total: 2 670€ HT\n- Casques EN397 classe E jaune/orange: 150 unités\n  Prix unitaire: 24,00€ HT → Total: 3 600€ HT\n\nTOTAL GLOBAL: 12 520€ HT (TVA 20%: 2 504€ → TTC: 15 024€)\n\nCONDITIONS COMMERCIALES:\n- Délai de livraison: 2 semaines\n- Garantie: 18 mois\n- Paiement souhaité: 30 jours fin de mois\n- Validité offre: 30 jours\n\nCERTIFICATIONS: ISO 9001, OHSAS 18001\nRéférence: 45 clients industriels actifs\nCAHIER DES CHARGES: Respecté à 100%`
+    };
+    const key = Math.random() > 0.5 ? 'cdc' : 'offre';
+    handleFileContent(`demo_${key}.txt`, demos[key]);
+  }, [handleFileContent]);
+
+  const docInfo = file ? (DOC_TYPES[docType] || DOC_TYPES.autre) : null;
+
+  return (
+    <div id="root" style={{ '--c-violet': tweaks.accentColor }}>
+      {/* Header */}
+      <header className="header">
+        <div>
+          <div className="logo">AchatPro<span>Intelligence Achat · v2.0</span></div>
+        </div>
+        <div className="header-right">
+          <div className="stage-dot"></div>
+          <span style={{ fontSize: 11, color: 'var(--c-muted)' }}>IA active</span>
+          <div className="badge-beta">Beta</div>
+        </div>
+      </header>
+
+      {/* Pipeline */}
+      <nav className="pipeline">
+        {PIPELINE_STEPS.map((step, i) => (
+          <div key={step.id} className="pipeline-step">
+            <div className={`step-inner ${activeStep === step.id ? 'active' : ''}`} onClick={() => setActiveStep(step.id)}>
+              <div className={`step-num ${activeStep === step.id ? 'active' : 'idle'}`}>{i + 1}</div>
+              <span className={`step-label ${activeStep === step.id ? 'active' : 'idle'}`}>{step.emoji} {step.label}</span>
+            </div>
+            {i < PIPELINE_STEPS.length - 1 && <span className="step-arrow">›</span>}
+          </div>
+        ))}
+      </nav>
+
+      {/* Main */}
+      <div className="main">
+        {/* Left panel */}
+        <div className="left-panel">
+          <div className="panel-title">Document source</div>
+
+          {/* Drop zone */}
+          {!file ? (
+            <div
+              className={`drop-zone ${isDragging ? 'dragging' : ''}`}
+              onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={onDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <span className="drop-icon">{isDragging ? '📂' : '📁'}</span>
+              <div className="drop-title">Glissez votre document</div>
+              <div className="drop-sub">ou cliquez pour parcourir</div>
+              <div className="drop-formats">
+                {['TXT', 'PDF', 'DOCX', 'CSV', 'XLSX', 'Email'].map(f => <span key={f} className="fmt-chip">{f}</span>)}
+              </div>
+              <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={onFileChange} accept=".txt,.pdf,.doc,.docx,.csv,.xlsx,.eml,.msg" />
+            </div>
+          ) : (
+            <div className="file-loaded">
+              <div className="file-icon-wrap" style={{ background: `${docInfo.color}22` }}>
+                <span>{docInfo.emoji}</span>
+              </div>
+              <div className="file-info">
+                <div className="file-name">{file.name}</div>
+                <div className="file-type-tag">✓ {docInfo.label} détecté</div>
+              </div>
+              <button className="file-remove" onClick={() => { setFile(null); setDocType(null); setResult(null); setActiveAction(null); }} title="Supprimer">×</button>
+            </div>
+          )}
+
+          {!file && (
+            <div style={{ padding: '0 16px 10px', textAlign: 'center' }}>
+              <button className="ws-btn" style={{ fontSize: 10, width: '100%' }} onClick={useDemoDoc}>
+                🧪 Charger un document démo
+              </button>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="actions-section">
+            {ACTION_GROUPS.map(group => (
+              <div key={group.label}>
+                <div className="action-group-label">{group.label}</div>
+                {group.actions.map(action => (
+                  <button
+                    key={action.id}
+                    className={`action-btn ${activeAction === action.id ? 'active-btn' : ''} ${loading && activeAction === action.id ? 'loading' : ''}`}
+                    style={{ '--btn-grad': `linear-gradient(135deg, ${action.color}, ${action.color}88)` }}
+                    onClick={() => runAction(action.id)}
+                    disabled={loading}
+                  >
+                    <span className="btn-emoji">{loading && activeAction === action.id ? '⏳' : action.emoji}</span>
+                    <span className="btn-content">
+                      <span className="btn-label">{action.label}</span>
+                      <span className="btn-desc">{action.desc}</span>
+                    </span>
+                    <span className="btn-arrow">›</span>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* History */}
+          {tweaks.showHistory && history.length > 0 && (
+            <div className="history-bar">
+              <div className="history-title">Historique récent</div>
+              <div className="history-list">
+                {history.slice(0, 4).map(h => (
+                  <div key={h.id} className="history-item" onClick={() => { setResult(h.result); setActiveAction(h.action); setDocType(h.docType); }}>
+                    <span className="history-item-icon">{h.emoji}</span>
+                    <span className="history-item-label">{h.label}</span>
+                    <span className="history-item-time">{h.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Workspace */}
+        <div className="workspace">
+          <div className="workspace-header">
+            <div className="workspace-title">
+              {result ? '📋 Résultats de l\'analyse' : file ? '⬅ Choisissez une action' : '🚀 Espace de travail'}
+            </div>
+            {result && (
+              <div className="workspace-actions">
+                <button className="ws-btn" onClick={() => setResult(null)}>↩ Nouvelle analyse</button>
+                <button className="ws-btn primary" onClick={() => navigator.clipboard?.writeText(result.text).then(() => showToast('Copié dans le presse-papier'))}>📋 Copier</button>
+              </div>
+            )}
+          </div>
+          <div className="result-area">
+            {loading && (
+              <div className="loading-state">
+                <div className="loading-ring"></div>
+                <div className="loading-text">{loadingMsg}<span className="loading-dots"><span>.</span><span>.</span><span>.</span></span></div>
+                <div style={{ fontSize: 11, color: 'var(--c-muted)' }}>AchatPro analyse votre document</div>
+              </div>
+            )}
+            {!loading && !result && (
+              <Placeholder onDemoClick={(label) => showToast(`Déposez d'abord un document, puis cliquez sur "${label}"`, '💡')} />
+            )}
+            {!loading && result && (
+              <ResultContent result={result} action={activeAction} docType={docType} />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Tweaks */}
+      <TweaksPanel>
+        <TweakSection title="Apparence">
+          <TweakColor label="Couleur d'accent" id="accentColor" tweaks={tweaks} setTweak={setTweak} />
+          <TweakToggle label="Fond animé" id="animatedBg" tweaks={tweaks} setTweak={setTweak} />
+        </TweakSection>
+        <TweakSection title="Interface">
+          <TweakToggle label="Afficher l'historique" id="showHistory" tweaks={tweaks} setTweak={setTweak} />
+          <TweakToggle label="Mode compact" id="compactMode" tweaks={tweaks} setTweak={setTweak} />
+        </TweakSection>
+      </TweaksPanel>
+
+      {/* Toast */}
+      <div className={`toast ${toast.visible ? 'visible' : ''}`}>{toast.msg}</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<AchatPro />);
+</script>
+</body>
+</html>

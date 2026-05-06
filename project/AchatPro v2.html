@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AchatPro — Intelligence Achat</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<style>
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f4f6fb;
+  --surface:   #ffffff;
+  --surface2:  #f9fafc;
+  --border:    #e4e8f0;
+  --border2:   #d0d7e6;
+  --text:      #111827;
+  --text2:     #4b5563;
+  --text3:     #9ca3af;
+  --indigo:    #4f46e5;
+  --indigo-l:  #eef2ff;
+  --indigo-m:  #c7d2fe;
+  --violet:    #7c3aed;
+  --cyan:      #0891b2;
+  --emerald:   #059669;
+  --amber:     #d97706;
+  --rose:      #e11d48;
+  --radius:    12px;
+  --radius-sm: 8px;
+  --shadow:    0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 24px rgba(0,0,0,.08), 0 1px 6px rgba(0,0,0,.05);
+}
+
+html, body { height: 100%; overflow: hidden; background: var(--bg); }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--text); font-size: 13px; }
+
+/* ── Layout ─────────────────────────────── */
+#root { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Top bar ─────────────────────────────── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  height: 54px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 16px;
+}
+.logo {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-weight: 800; font-size: 19px; letter-spacing: -0.5px;
+  color: var(--indigo);
+  display: flex; align-items: center; gap: 8px;
+}
+.logo-mark {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--indigo), var(--violet));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: #fff; font-weight: 800;
+}
+.topbar-nav {
+  display: flex; gap: 2px; flex: 1; justify-content: center;
+}
+.nav-tab {
+  padding: 6px 16px; border-radius: 6px;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border: none; background: transparent; color: var(--text2);
+  transition: all .15s;
+}
+.nav-tab:hover { background: var(--surface2); color: var(--text); }
+.nav-tab.active { background: var(--indigo-l); color: var(--indigo); font-weight: 600; }
+
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); }
+.status-label { font-size: 11px; color: var(--text3); }
+.chip {
+  padding: 3px 10px; border-radius: 20px; font-size: 10px;
+  font-weight: 600; letter-spacing: .5px; text-transform: uppercase;
+}
+.chip-beta { background: var(--indigo-l); color: var(--indigo); border: 1px solid var(--indigo-m); }
+
+/* ── Pipeline strip ─────────────────────────────── */
+.pipeline {
+  display: flex; align-items: center;
+  padding: 0 24px;
+  height: 44px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; flex-shrink: 0;
+  scrollbar-width: none; gap: 2px;
+}
+.pipeline::-webkit-scrollbar { display: none; }
+.pip-step {
+  display: flex; align-items: center; gap: 0;
+  cursor: pointer; flex-shrink: 0;
+}
+.pip-inner {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 6px;
+  transition: all .15s; border: 1px solid transparent;
+}
+.pip-inner:hover { background: var(--surface2); }
+.pip-inner.active { background: var(--indigo-l); border-color: var(--indigo-m); }
+.pip-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; flex-shrink: 0;
+}
+.pip-num.active { background: var(--indigo); color: #fff; }
+.pip-num.done { background: var(--emerald); color: #fff; }
+.pip-num.idle { background: var(--bg); color: var(--text3); border: 1px solid var(--border); }
+.pip-label { font-size: 11px; font-weight: 500; white-space: nowrap; }
+.pip-label.active { color: var(--indigo); font-weight: 600; }
+.pip-label.idle { color: var(--text3); }
+.pip-arrow { color: var(--border2); font-size: 13px; padding: 0 2px; }
+
+/* ── Main ─────────────────────────────── */
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Sidebar ─────────────────────────────── */
+.sidebar {
+  width: 300px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden; background: var(--surface);
+}
+.sidebar-section { padding: 14px 16px 6px; }
+.sidebar-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 8px;
+}
+
+/* ── Drop zone ─────────────────────────────── */
+.drop-zone {
+  margin: 0 12px 10px;
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 22px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--surface2);
+}
+.drop-zone:hover, .drop-zone.drag { border-color: var(--indigo); background: var(--indigo-l); }
+.drop-zone.drag { box-shadow: 0 0 0 4px rgba(79,70,229,.1); }
+.dz-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+.dz-title { font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 4px; }
+.dz-sub { font-size: 11px; color: var(--text3); line-height: 1.5; }
+.fmt-row { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 10px; }
+.fmt-chip {
+  font-size: 9px; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
+  background: var(--border); color: var(--text2);
+}
+
+/* File loaded */
+.file-card {
+  margin: 0 12px 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  display: flex; align-items: center; gap: 9px;
+  animation: slideIn .25s ease;
+}
+@keyframes slideIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+.file-icon { font-size: 22px; flex-shrink: 0; }
+.file-info { flex: 1; min-width: 0; }
+.file-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-tag { font-size: 10px; color: var(--emerald); margin-top: 1px; font-weight: 500; }
+.file-rm { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 2px 4px; border-radius: 4px; }
+.file-rm:hover { background: #fee2e2; color: var(--rose); }
+
+/* ── Actions ─────────────────────────────── */
+.actions-scroll { flex: 1; overflow-y: auto; padding: 0 12px 12px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.ag-label { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); margin: 10px 0 5px; }
+
+.action-item {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  margin-bottom: 5px;
+  overflow: hidden;
+  transition: border-color .15s, box-shadow .15s;
+}
+.action-item:hover { border-color: var(--border2); box-shadow: var(--shadow); }
+.action-item.active-item { border-color: var(--indigo-m); box-shadow: 0 0 0 3px rgba(79,70,229,.08); }
+
+.action-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px; cursor: pointer; width: 100%;
+  background: none; border: none; text-align: left; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.action-row-wrap {
+  display: flex; flex-direction: column;
+}
+.action-row:disabled { opacity: .45; cursor: not-allowed; }
+.a-emoji { font-size: 16px; flex-shrink: 0; }
+.a-info { flex: 1; }
+.a-label { font-size: 12px; font-weight: 600; color: var(--text); display: block; }
+.a-desc { font-size: 10px; color: var(--text3); margin-top: 1px; display: block; }
+.a-actions { display: flex; align-items: center; gap: 4px; }
+.a-prompt-btn {
+  padding: 2px 7px; border-radius: 4px; font-size: 9px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text3);
+  cursor: pointer; letter-spacing: .3px; transition: all .15s; white-space: nowrap;
+}
+.a-prompt-btn:hover { border-color: var(--indigo-m); color: var(--indigo); background: var(--indigo-l); }
+.a-prompt-btn.open { background: var(--indigo-l); color: var(--indigo); border-color: var(--indigo-m); }
+.a-run-btn {
+  padding: 4px 12px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  border: none; background: var(--indigo); color: #fff; cursor: pointer;
+  transition: all .15s; white-space: nowrap;
+}
+.a-run-btn:hover { background: #3730a3; }
+.a-run-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* Prompt editor */
+.prompt-editor {
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  padding: 10px 11px;
+  animation: slideIn .2s ease;
+}
+.prompt-editor-label {
+  font-size: 9px; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase; color: var(--text3); margin-bottom: 6px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.prompt-reset {
+  font-size: 9px; font-weight: 600; color: var(--indigo); cursor: pointer;
+  border: none; background: none; padding: 0; letter-spacing: 0;
+}
+.prompt-reset:hover { text-decoration: underline; }
+.prompt-textarea {
+  width: 100%; font-size: 10px; font-family: system-ui, monospace;
+  color: var(--text2); background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 6px; padding: 8px; resize: vertical; min-height: 100px;
+  line-height: 1.55; outline: none; transition: border-color .15s;
+}
+.prompt-textarea:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,.08); }
+.prompt-hint { font-size: 9px; color: var(--text3); margin-top: 5px; line-height: 1.4; }
+.prompt-vars { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.pvar {
+  font-size: 9px; padding: 1px 6px; border-radius: 3px;
+  background: #ede9fe; color: var(--violet); font-weight: 600;
+  cursor: pointer; border: none;
+}
+.pvar:hover { background: #ddd6fe; }
+
+/* History sidebar bottom */
+.history-foot {
+  border-top: 1px solid var(--border);
+  padding: 8px 12px 10px;
+  flex-shrink: 0;
+}
+.hist-label { font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; }
+.hist-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 6px; border-radius: 5px; cursor: pointer; transition: background .12s;
+}
+.hist-item:hover { background: var(--surface2); }
+.hist-em { font-size: 12px; }
+.hist-text { font-size: 10px; color: var(--text2); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hist-time { font-size: 9px; color: var(--text3); }
+
+/* ── Workspace ─────────────────────────────── */
+.workspace { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+
+.ws-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; flex-shrink: 0;
+}
+.ws-title { font-weight: 700; font-size: 14px; font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); }
+.ws-btns { display: flex; gap: 6px; }
+.btn-sm {
+  padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text2);
+  cursor: pointer; transition: all .15s;
+}
+.btn-sm:hover { border-color: var(--border2); color: var(--text); }
+.btn-sm.primary { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+.btn-sm.primary:hover { background: #3730a3; border-color: #3730a3; }
+
+.result-wrap {
+  flex: 1; margin: 0 20px 20px;
+  background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border); overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: var(--shadow);
+}
+
+/* Placeholder */
+.placeholder {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px; padding: 40px;
+}
+.ph-icon { font-size: 44px; opacity: .5; }
+.ph-title { font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 700; font-size: 17px; color: var(--text); }
+.ph-sub { font-size: 12px; color: var(--text2); text-align: center; max-width: 360px; line-height: 1.6; }
+.ph-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 560px; width: 100%; margin-top: 4px; }
+.ph-card {
+  padding: 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface2);
+  text-align: center; cursor: pointer; transition: all .15s;
+}
+.ph-card:hover { border-color: var(--indigo-m); background: var(--indigo-l); }
+.ph-card .ico { font-size: 20px; margin-bottom: 6px; display: block; }
+.ph-card .lbl { font-size: 11px; font-weight: 600; color: var(--text); }
+.ph-card .dsc { font-size: 10px; color: var(--text3); margin-top: 2px; line-height: 1.4; }
+
+/* Loading */
+.loading-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.spinner { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--indigo); border-right-color: var(--violet); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-msg { font-size: 13px; font-weight: 500; color: var(--text2); }
+.loading-sub { font-size: 11px; color: var(--text3); }
+.dots span { animation: blink 1.4s infinite; display: inline-block; }
+.dots span:nth-child(2) { animation-delay: .2s; }
+.dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+/* Result content */
+.result-header-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.rh-icon { font-size: 20px; }
+.rh-title { font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 700; font-size: 15px; flex: 1; }
+.rh-sub { font-size: 11px; color: var(--text3); }
+.copy-btn {
+  padding: 4px 12px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text2);
+  cursor: pointer; transition: all .15s;
+}
+.copy-btn:hover { border-color: var(--border2); color: var(--text); }
+
+.result-body { flex: 1; overflow-y: auto; padding: 20px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+/* Markdown */
+.md h1, .md h2, .md h3 { font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 700; margin: 18px 0 8px; color: var(--text); }
+.md h1 { font-size: 17px; }
+.md h2 { font-size: 14px; color: var(--indigo); border-bottom: 1px solid var(--indigo-m); padding-bottom: 4px; }
+.md h3 { font-size: 12px; color: var(--text); text-transform: uppercase; letter-spacing: .5px; }
+.md p { font-size: 13px; color: var(--text2); margin-bottom: 10px; line-height: 1.7; }
+.md ul, .md ol { margin: 6px 0 12px 20px; }
+.md li { font-size: 13px; color: var(--text2); margin-bottom: 5px; line-height: 1.6; }
+.md strong { color: var(--text); font-weight: 600; }
+.md em { color: var(--indigo); font-style: normal; font-weight: 500; }
+.md blockquote { border-left: 3px solid var(--indigo-m); padding: 8px 14px; background: var(--indigo-l); border-radius: 0 6px 6px 0; margin: 10px 0; font-style: italic; color: var(--text2); font-size: 12px; }
+.md table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+.md th { text-align: left; padding: 8px 12px; background: var(--surface2); color: var(--text); font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--border); }
+.md td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+.md tr:hover td { background: var(--surface2); }
+.md tr:last-child td { border-bottom: none; }
+
+/* Tags */
+.tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
+.tag { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+.tag-risk { background: #fff1f2; color: var(--rose); border: 1px solid #fecdd3; }
+.tag-ok { background: #f0fdf4; color: var(--emerald); border: 1px solid #bbf7d0; }
+.tag-warn { background: #fffbeb; color: var(--amber); border: 1px solid #fde68a; }
+.tag-info { background: var(--indigo-l); color: var(--indigo); border: 1px solid var(--indigo-m); }
+
+/* Score card */
+.score-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 18px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface2); margin-bottom: 14px;
+}
+.score-num { font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 800; font-size: 34px; color: var(--indigo); line-height: 1; }
+.score-bar-wrap { flex: 1; }
+.score-bar-lbl { font-size: 11px; color: var(--text3); margin-bottom: 5px; }
+.score-bar-track { height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--indigo), var(--violet)); transition: width 1.2s ease; }
+
+/* Checklist */
+.checklist { list-style: none; margin: 10px 0; }
+.checklist li { display: flex; align-items: flex-start; gap: 9px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.check-box { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; transition: all .15s; border: 1.5px solid var(--border2); background: var(--surface); }
+.check-box:hover { border-color: var(--indigo); }
+.check-box.checked { background: var(--emerald); border-color: var(--emerald); color: #fff; }
+.cl-text { color: var(--text2); line-height: 1.5; }
+.cl-text.done { text-decoration: line-through; color: var(--text3); }
+
+/* ── Tab: Calculateurs ─────────────────────────── */
+.calc-wrap { flex: 1; margin: 0 20px 20px; display: flex; gap: 14px; overflow: hidden; }
+
+.calc-sidebar {
+  width: 200px; flex-shrink: 0;
+  background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 14px 10px;
+  box-shadow: var(--shadow);
+}
+.calc-nav-lbl { font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; padding: 0 6px; }
+.calc-nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 6px; cursor: pointer;
+  font-size: 12px; font-weight: 500; color: var(--text2);
+  transition: all .15s; border: none; background: none; width: 100%; text-align: left;
+}
+.calc-nav-item:hover { background: var(--surface2); color: var(--text); }
+.calc-nav-item.active { background: var(--indigo-l); color: var(--indigo); font-weight: 600; }
+.calc-nav-item .ci { font-size: 15px; }
+
+.calc-main {
+  flex: 1; background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border); overflow-y: auto; padding: 24px;
+  box-shadow: var(--shadow); scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.calc-title { font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 800; font-size: 18px; color: var(--text); margin-bottom: 4px; }
+.calc-sub { font-size: 12px; color: var(--text3); margin-bottom: 20px; }
+
+/* Form */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.form-field { display: flex; flex-direction: column; gap: 4px; }
+.form-field.full { grid-column: 1/-1; }
+label { font-size: 11px; font-weight: 600; color: var(--text2); }
+input[type=number], input[type=text], select, textarea.field {
+  padding: 7px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border2);
+  background: var(--surface2); font-size: 12px; color: var(--text); outline: none;
+  transition: border-color .15s; font-family: 'Inter', sans-serif; width: 100%;
+}
+input:focus, select:focus, textarea.field:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,.08); }
+.input-prefix-wrap { position: relative; }
+.input-prefix { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text3); pointer-events: none; }
+.input-prefix + input { padding-left: 22px; }
+
+.section-sep { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+.calc-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+  border: none; background: var(--indigo); color: #fff; cursor: pointer; transition: all .15s;
+}
+.calc-btn:hover { background: #3730a3; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,.3); }
+.calc-btn-sec {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface2); color: var(--text2); cursor: pointer;
+}
+.calc-btn-sec:hover { border-color: var(--border2); color: var(--text); }
+
+/* Result blocks */
+.result-block {
+  border-radius: var(--radius); border: 1px solid var(--border);
+  overflow: hidden; margin-top: 20px; animation: slideIn .25s ease;
+}
+.rb-header {
+  padding: 10px 16px; background: var(--indigo-l);
+  border-bottom: 1px solid var(--indigo-m);
+  display: flex; align-items: center; gap: 8px;
+}
+.rb-title { font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 700; font-size: 13px; color: var(--indigo); flex: 1; }
+.rb-body { padding: 16px; }
+
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.kpi-card { padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); text-align: center; }
+.kpi-val { font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 800; font-size: 22px; color: var(--indigo); }
+.kpi-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; font-weight: 500; }
+
+.offer-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.offer-row:last-child { margin-bottom: 0; }
+.offer-rank { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.rank-1 { background: #fef3c7; color: #92400e; }
+.rank-2 { background: #e5e7eb; color: #374151; }
+.rank-3 { background: #fef9c3; color: #78350f; }
+.rank-n { background: var(--bg); color: var(--text3); }
+.offer-name { font-size: 12px; font-weight: 600; width: 120px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.offer-bar-wrap { flex: 1; }
+.offer-bar-track { height: 8px; background: var(--border); border-radius: 10px; overflow: hidden; }
+.offer-bar-fill { height: 100%; border-radius: 10px; transition: width 1s ease; }
+.offer-price { font-size: 12px; font-weight: 700; width: 80px; text-align: right; color: var(--text); flex-shrink: 0; }
+.offer-score-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; flex-shrink: 0; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(14px);
+  background: var(--text); border-radius: 30px; padding: 9px 18px;
+  font-size: 12px; font-weight: 600; color: #fff; z-index: 9999;
+  opacity: 0; transition: all .25s ease; pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Demo btn */
+.demo-btn {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  width: calc(100% - 24px); margin: 0 12px 10px;
+  padding: 7px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600;
+  border: 1px dashed var(--border2); background: transparent; color: var(--text3);
+  cursor: pointer; transition: all .15s;
+}
+.demo-btn:hover { border-color: var(--indigo-m); color: var(--indigo); background: var(--indigo-l); }
+
+/* Offres dynamiques */
+.offers-add-btn {
+  display: flex; align-items: center; gap: 5px; padding: 6px 12px;
+  border-radius: 5px; border: 1px dashed var(--border2); background: transparent;
+  font-size: 11px; font-weight: 600; color: var(--text3); cursor: pointer; transition: all .15s;
+}
+.offers-add-btn:hover { border-color: var(--indigo-m); color: var(--indigo); }
+.offer-input-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 28px; gap: 8px; align-items: center; margin-bottom: 6px; }
+.rm-offer { background: none; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; color: var(--text3); font-size: 13px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; transition: all .12s; }
+.rm-offer:hover { background: #fff1f2; color: var(--rose); border-color: #fecdd3; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useCallback, useEffect } = React;
+
+// ── Data ──────────────────────────────────────────────────────
+const PIPELINE = [
+  { id:'sourcing', label:'Sourcing', emoji:'🔍' },
+  { id:'rfp', label:"Appel d'offres", emoji:'📋' },
+  { id:'analyse', label:'Analyse offres', emoji:'📊' },
+  { id:'nego', label:'Négociation', emoji:'🤝' },
+  { id:'contrat', label:'Contractualisation', emoji:'✍️' },
+  { id:'suivi', label:'Suivi commandes', emoji:'📦' },
+  { id:'eval', label:'Évaluation', emoji:'⭐' },
+  { id:'reporting', label:'Reporting', emoji:'📈' },
+];
+
+const DOC_TYPES = {
+  cdc: { label:'Cahier des charges', emoji:'📄', color:'#4f46e5' },
+  offre: { label:'Offre fournisseur', emoji:'💼', color:'#7c3aed' },
+  contrat: { label:'Contrat', emoji:'✍️', color:'#0891b2' },
+  facture: { label:'Facture', emoji:'🧾', color:'#059669' },
+  bc: { label:'Bon de commande', emoji:'🛒', color:'#d97706' },
+  tableau: { label:'Tableau comparatif', emoji:'📊', color:'#db2777' },
+  email: { label:'Email fournisseur', emoji:'✉️', color:'#7c3aed' },
+  audit: { label:"Rapport d'audit", emoji:'🔍', color:'#dc2626' },
+  devis: { label:'Devis', emoji:'💰', color:'#16a34a' },
+  autre: { label:'Document', emoji:'📁', color:'#6b7280' },
+};
+
+const ACTION_GROUPS = [
+  { label:'Analyse rapide', actions:[
+    { id:'resume', emoji:'⚡', label:'Résumé synthétique', desc:'Points clés en 5 bullets' },
+    { id:'risques', emoji:'🚨', label:'Détection des risques', desc:'Risques contractuels & opérationnels' },
+    { id:'checklist', emoji:'✅', label:'Checklist de validation', desc:'Points à vérifier avant validation' },
+  ]},
+  { label:'Évaluation fournisseur', actions:[
+    { id:'score', emoji:'⭐', label:'Score fournisseur', desc:'Notation multicritère automatique' },
+    { id:'comparatif', emoji:'📊', label:'Tableau comparatif', desc:'Synthèse comparative structurée' },
+    { id:'recommandation', emoji:'🎯', label:"Recommandation d'action", desc:'Décision suggérée et next steps' },
+  ]},
+  { label:'Négociation & Contrat', actions:[
+    { id:'nego', emoji:'🤝', label:'Points de négociation', desc:'Leviers & arguments clés' },
+    { id:'email', emoji:'✉️', label:'Email de réponse', desc:'Rédaction email professionnel' },
+    { id:'clauses', emoji:'📝', label:'Analyse contractuelle', desc:'Clauses sensibles & pénalités' },
+  ]},
+];
+
+const DEFAULT_PROMPTS = {
+  resume: (docLabel, content) => `Tu es un expert achat senior. Analyse ce document (${docLabel}) et produis un RÉSUMÉ SYNTHÉTIQUE structuré en français.\n\nDocument:\n"""\n${content}\n"""\n\nStructure:\n## Résumé exécutif\n[2-3 phrases]\n\n## Points clés\n- Point 1\n- Point 2\n- Point 3\n- Point 4\n- Point 5\n\n## Informations chiffrées importantes\n[Montants, délais, quantités]\n\n## Ce qui nécessite attention immédiate\n[1-2 éléments urgents]`,
+
+  risques: (docLabel, content) => `Tu es expert en gestion des risques achats. Analyse ce document (${docLabel}).\n\nDocument:\n"""\n${content}\n"""\n\n## 🔴 Risques critiques\n## 🟡 Points de vigilance\n## 🟢 Points positifs\n## Risques juridiques & contractuels\n## Risques opérationnels\n## Actions correctives suggérées`,
+
+  checklist: (docLabel, content) => `Tu es un acheteur expert. Crée une checklist de validation complète pour ce document (${docLabel}).\n\nDocument:\n"""\n${content}\n"""\n\n## Checklist — ${docLabel}\n### Conformité administrative\n- [ ] Item\n### Conditions commerciales\n- [ ] Item\n### Conditions juridiques\n- [ ] Item\n### Conditions techniques\n- [ ] Item\n### Due diligence fournisseur\n- [ ] Item\n\n15 à 25 items au total.`,
+
+  score: (docLabel, content) => `Tu es expert en évaluation fournisseurs. Note ce fournisseur/document (${docLabel}).\n\nDocument:\n"""\n${content}\n"""\n\n## Score Global: [X/100]\n\n## Détail des critères\n| Critère | Note /20 | Commentaire |\n|---------|----------|-------------|\n| Prix & conditions financières | /20 | |\n| Qualité & conformité | /20 | |\n| Délais & réactivité | /20 | |\n| Solidité & références | /20 | |\n| Durabilité & RSE | /20 | |\n\n## Verdict\n[RECOMMANDÉ / ACCEPTABLE / À RETRAVAILLER / ÉLIMINÉ]\n\n## Justification\n[3-4 phrases]`,
+
+  comparatif: (docLabel, content) => `Tu es acheteur senior. Crée un tableau comparatif depuis ce document (${docLabel}).\n\nDocument:\n"""\n${content}\n"""\n\n## Tableau comparatif\n| Critère | Détail | Évaluation |\n|---------|--------|------------|\n\n## Points différenciants\n## Gap analysis\n## Position de négociation`,
+
+  recommandation: (docLabel, content) => `Tu es directeur achat. Donne une recommandation claire sur ce document (${docLabel}).\n\nDocument:\n"""\n${content}\n"""\n\n## Décision recommandée\n**[VALIDER / NÉGOCIER / REJETER / EN ATTENTE]**\n\n## Justification (3 arguments)\n## Plan d'action\n| Étape | Action | Délai |\n|-------|--------|-------|\n\n## Conditions de validation\n## Risque si inaction`,
+
+  nego: (docLabel, content) => `Tu es négociateur achat expert. Prépare la stratégie pour ce document (${docLabel}).\n\nDocument:\n"""\n${content}\n"""\n\n## Contexte & rapport de force\n## Nos objectifs (idéal / acceptable / ligne rouge)\n## Leviers de négociation\n## Arguments à préparer\n## Concessions possibles\n## Séquence de négociation\n## Phrases d'accroche`,
+
+  email: (docLabel, content) => `Tu es acheteur professionnel. Rédige un email professionnel lié à ce document (${docLabel}).\n\nDocument:\n"""\n${content}\n"""\n\n---\n**Objet:** [Objet clair]\n\nMadame, Monsieur,\n\n[Corps de l'email]\n\nCordialement,\n[Nom]\nDirection Achats\n\n---\n## Version alternative (ton direct)`,
+
+  clauses: (docLabel, content) => `Tu es juriste achat. Analyse les clauses de ce document (${docLabel}).\n\nDocument:\n"""\n${content}\n"""\n\n## Clauses favorables\n## Clauses à renégocier\n| Clause | Problème | Rédaction suggérée |\n|--------|----------|-------------------|\n## Clauses manquantes\n## Pièges juridiques\n## Pénalités & responsabilités\n## Recommandation`,
+};
+
+// ── Helpers ──────────────────────────────────────────────────
+function detectDocType(name='', content='') {
+  const n = name.toLowerCase(), c = content.toLowerCase();
+  if (n.includes('cdc')||n.includes('cahier')||c.includes('cahier des charges')) return 'cdc';
+  if (n.includes('contrat')||c.includes('présent contrat')) return 'contrat';
+  if (n.includes('facture')||c.includes('facture n°')) return 'facture';
+  if (n.includes('devis')||c.includes('devis n°')) return 'devis';
+  if (n.includes('bon de commande')||c.includes('bon de commande')) return 'bc';
+  if (n.includes('audit')||c.includes("rapport d'audit")) return 'audit';
+  if (n.includes('email')||c.includes('cordialement')) return 'email';
+  if (c.includes('offre')||c.includes('proposition commerciale')) return 'offre';
+  return 'autre';
+}
+
+function renderMarkdown(text) {
+  let h = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+    .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`(.+?)`/g,'<code style="background:var(--bg);padding:1px 5px;border-radius:3px;font-size:11px">$1</code>')
+    .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
+    .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>\n?)+/gs, m=>`<ul>${m}</ul>`);
+
+  // Tables
+  h = h.replace(/((?:\|.+\|\n?)+)/g, block => {
+    const rows = block.trim().split('\n').filter(r=>r.includes('|')&&!/^\|[-: |]+\|$/.test(r));
+    if (!rows.length) return block;
+    let out = '<table>';
+    rows.forEach((row,i) => {
+      const cells = row.split('|').filter(c=>c.trim()!=='');
+      const t = i===0?'th':'td';
+      out += '<tr>'+cells.map(c=>`<${t}>${c.trim()}</${t}>`).join('')+'</tr>';
+    });
+    return out+'</table>';
+  });
+  return h;
+}
+
+// ── Checklist component ──────────────────────────────────────
+function ChecklistView({ text }) {
+  const [checked, setChecked] = useState({});
+  const items = [];
+  text.split('\n').forEach(line => {
+    const m = line.match(/^- \[([ x])\] (.+)/);
+    if (m) items.push({ id: items.length, label: m[2], init: m[1]==='x' });
+  });
+  if (!items.length) return <div className="md" dangerouslySetInnerHTML={{__html: renderMarkdown(text)}} />;
+  const done = items.filter(i => (checked.hasOwnProperty(i.id)?checked[i.id]:i.init)).length;
+  return (
+    <div>
+      <div className="score-card">
+        <div>
+          <div style={{fontSize:10,color:'var(--text3)',marginBottom:3}}>Progression</div>
+          <div className="score-num">{done}/{items.length}</div>
+        </div>
+        <div className="score-bar-wrap">
+          <div className="score-bar-lbl">{Math.round(done/items.length*100)}% validé</div>
+          <div className="score-bar-track"><div className="score-bar-fill" style={{width:`${done/items.length*100}%`}}/></div>
+        </div>
+      </div>
+      <ul className="checklist">
+        {items.map(item => {
+          const isChecked = checked.hasOwnProperty(item.id)?checked[item.id]:item.init;
+          return (
+            <li key={item.id}>
+              <div className={`check-box ${isChecked?'checked':''}`} onClick={()=>setChecked(p=>({...p,[item.id]:!isChecked}))}>
+                {isChecked?'✓':''}
+              </div>
+              <span className={`cl-text ${isChecked?'done':''}`}>{item.label}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+// ── Result view ──────────────────────────────────────────────
+function ResultView({ result, action, docType, onCopy }) {
+  const actionInfo = ACTION_GROUPS.flatMap(g=>g.actions).find(a=>a.id===action) || {};
+  const docInfo = DOC_TYPES[docType] || DOC_TYPES.autre;
+  return (
+    <>
+      <div className="result-header-bar">
+        <span className="rh-icon">{actionInfo.emoji}</span>
+        <div style={{flex:1}}>
+          <div className="rh-title">{actionInfo.label}</div>
+          <div className="rh-sub">{docInfo.emoji} {docInfo.label} · AchatPro IA</div>
+        </div>
+        <button className="copy-btn" onClick={onCopy}>📋 Copier</button>
+      </div>
+      <div className="result-body">
+        {action==='checklist'
+          ? <ChecklistView text={result.text}/>
+          : <div className="md" dangerouslySetInnerHTML={{__html: renderMarkdown(result.text)}}/>
+        }
+      </div>
+    </>
+  );
+}
+
+// ── Action item ──────────────────────────────────────────────
+function ActionItem({ action, fileLoaded, loading, activeAction, onRun, promptOverrides, setPromptOverride }) {
+  const [showPrompt, setShowPrompt] = useState(false);
+  const isActive = activeAction === action.id;
+  const isLoading = loading && isActive;
+  const docPlaceholder = '[Type de document]';
+  const contentPlaceholder = '[Contenu du document]';
+  const defaultTemplate = DEFAULT_PROMPTS[action.id]
+    ? DEFAULT_PROMPTS[action.id](docPlaceholder, contentPlaceholder)
+    : `Analyse ce document achat.\n\nDocument:\n"""\n${contentPlaceholder}\n"""`;
+  const currentPrompt = promptOverrides[action.id] ?? defaultTemplate;
+
+  return (
+    <div className={`action-item ${isActive ? 'active-item' : ''}`}>
+      <div className="action-row" style={{cursor: loading?'not-allowed':'pointer', opacity: loading?0.7:1}} onClick={() => !loading && onRun(action.id)}>
+        <span className="a-emoji">{isLoading ? '⏳' : action.emoji}</span>
+        <span className="a-info">
+          <span className="a-label">{action.label}</span>
+          <span className="a-desc">{action.desc}</span>
+        </span>
+        <span style={{display:'flex',alignItems:'center',gap:4}}>
+          <button
+            className={`a-prompt-btn ${showPrompt?'open':''}`}
+            onClick={e=>{e.stopPropagation();setShowPrompt(p=>!p);}}
+            title="Voir et modifier le prompt"
+          >
+            {showPrompt ? '▲ Prompt' : '▼ Prompt'}
+          </button>
+          <button className="a-run-btn" disabled={loading} onClick={e=>{e.stopPropagation();onRun(action.id);}}>
+            {isLoading ? 'En cours…' : 'Lancer →'}
+          </button>
+        </span>
+      </div>
+      {showPrompt && (
+        <div className="prompt-editor">
+          <div className="prompt-editor-label">
+            <span>Prompt utilisé — modifiable</span>
+            <button className="prompt-reset" onClick={()=>setPromptOverride(action.id, null)}>↩ Réinitialiser</button>
+          </div>
+          <textarea
+            className="prompt-textarea"
+            value={currentPrompt}
+            onChange={e=>setPromptOverride(action.id, e.target.value)}
+            rows={6}
+          />
+          <div className="prompt-hint">
+            Les variables <strong>[Type de document]</strong> et <strong>[Contenu du document]</strong> sont remplacées automatiquement à l'exécution.
+          </div>
+          <div className="prompt-vars">
+            {['[Type de document]','[Contenu du document]'].map(v=>(
+              <button key={v} className="pvar" onClick={()=>setPromptOverride(action.id, currentPrompt+'\n'+v)}>{v}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── TCO Calculator ───────────────────────────────────────────
+function TcoCalc() {
+  const [form, setForm] = useState({
+    prixAchat:'', installation:'', maintenance:'', energie:'',
+    formation:'', duree:'3', obsolescence:'', fin:''
+  });
+  const [result, setResult] = useState(null);
+
+  const set = (k,v) => setForm(p=>({...p,[k]:v}));
+  const calc = () => {
+    const pa=parseFloat(form.prixAchat)||0, inst=parseFloat(form.installation)||0,
+      maint=(parseFloat(form.maintenance)||0)*parseInt(form.duree||3),
+      en=(parseFloat(form.energie)||0)*parseInt(form.duree||3),
+      form2=(parseFloat(form.formation)||0),
+      obs=(parseFloat(form.obsolescence)||0),
+      fin=(parseFloat(form.fin)||0);
+    const tco = pa+inst+maint+en+form2+obs+fin;
+    const par_an = tco/parseInt(form.duree||3);
+    setResult({ tco, par_an, pa, details:{inst,maint,en,form:form2,obs,fin} });
+  };
+
+  return (
+    <div>
+      <div className="calc-title">Calcul TCO</div>
+      <div className="calc-sub">Total Cost of Ownership — Coût total de possession sur la durée de vie</div>
+      <div className="form-grid">
+        <div className="form-field">
+          <label>Prix d'achat (€ HT)</label>
+          <div className="input-prefix-wrap"><span className="input-prefix">€</span><input type="number" value={form.prixAchat} onChange={e=>set('prixAchat',e.target.value)} placeholder="0"/></div>
+        </div>
+        <div className="form-field">
+          <label>Durée d'utilisation (années)</label>
+          <input type="number" value={form.duree} onChange={e=>set('duree',e.target.value)} min="1" max="20"/>
+        </div>
+        <div className="form-field">
+          <label>Coûts d'installation / mise en service (€)</label>
+          <div className="input-prefix-wrap"><span className="input-prefix">€</span><input type="number" value={form.installation} onChange={e=>set('installation',e.target.value)} placeholder="0"/></div>
+        </div>
+        <div className="form-field">
+          <label>Maintenance annuelle (€/an)</label>
+          <div className="input-prefix-wrap"><span className="input-prefix">€</span><input type="number" value={form.maintenance} onChange={e=>set('maintenance',e.target.value)} placeholder="0"/></div>
+        </div>
+        <div className="form-field">
+          <label>Coût énergétique annuel (€/an)</label>
+          <div className="input-prefix-wrap"><span className="input-prefix">€</span><input type="number" value={form.energie} onChange={e=>set('energie',e.target.value)} placeholder="0"/></div>
+        </div>
+        <div className="form-field">
+          <label>Formation & montée en compétences (€)</label>
+          <div className="input-prefix-wrap"><span className="input-prefix">€</span><input type="number" value={form.formation} onChange={e=>set('formation',e.target.value)} placeholder="0"/></div>
+        </div>
+        <div className="form-field">
+          <label>Coût d'obsolescence prévu (€)</label>
+          <div className="input-prefix-wrap"><span className="input-prefix">€</span><input type="number" value={form.obsolescence} onChange={e=>set('obsolescence',e.target.value)} placeholder="0"/></div>
+        </div>
+        <div className="form-field">
+          <label>Coût de fin de vie / cession (€)</label>
+          <div className="input-prefix-wrap"><span className="input-prefix">€</span><input type="number" value={form.fin} onChange={e=>set('fin',e.target.value)} placeholder="0"/></div>
+        </div>
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <button className="calc-btn" onClick={calc}>Calculer le TCO</button>
+        <button className="calc-btn-sec" onClick={()=>{setForm({prixAchat:'',installation:'',maintenance:'',energie:'',formation:'',duree:'3',obsolescence:'',fin:''});setResult(null);}}>Réinitialiser</button>
+      </div>
+
+      {result && (
+        <div className="result-block">
+          <div className="rb-header">
+            <span style={{fontSize:16}}>📊</span>
+            <span className="rb-title">Résultat TCO sur {form.duree} ans</span>
+          </div>
+          <div className="rb-body">
+            <div className="kpi-row">
+              <div className="kpi-card">
+                <div className="kpi-val">{result.tco.toLocaleString('fr-FR')} €</div>
+                <div className="kpi-lbl">TCO Total HT</div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-val">{Math.round(result.par_an).toLocaleString('fr-FR')} €</div>
+                <div className="kpi-lbl">Coût annuel moyen</div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-val">{result.pa>0?Math.round((result.tco-result.pa)/result.pa*100):'—'} %</div>
+                <div className="kpi-lbl">Surcoût vs prix achat</div>
+              </div>
+            </div>
+            <div style={{marginTop:8}}>
+              {[
+                {lbl:'Prix d\'achat', val:result.pa},
+                {lbl:'Installation', val:result.details.inst},
+                {lbl:'Maintenance totale', val:result.details.maint},
+                {lbl:'Énergie totale', val:result.details.en},
+                {lbl:'Formation', val:result.details.form},
+                {lbl:'Obsolescence', val:result.details.obs},
+                {lbl:'Fin de vie', val:result.details.fin},
+              ].filter(d=>d.val>0).map(d=>(
+                <div key={d.lbl} style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+                  <span style={{fontSize:12,width:160,color:'var(--text2)',flexShrink:0}}>{d.lbl}</span>
+                  <div style={{flex:1,height:6,background:'var(--border)',borderRadius:10,overflow:'hidden'}}>
+                    <div style={{height:'100%',background:'linear-gradient(90deg,var(--indigo),var(--violet))',borderRadius:10,width:`${result.tco>0?d.val/result.tco*100:0}%`,transition:'width 1s ease'}}/>
+                  </div>
+                  <span style={{fontSize:12,fontWeight:700,color:'var(--text)',width:90,textAlign:'right'}}>{d.val.toLocaleString('fr-FR')} €</span>
+                  <span style={{fontSize:10,color:'var(--text3)',width:36,textAlign:'right'}}>{result.tco>0?Math.round(d.val/result.tco*100):0}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Offer Comparison ─────────────────────────────────────────
+const CRITERIA = ['Prix (€)', 'Qualité (/20)', 'Délai (jours)', 'Service (/20)', 'RSE (/20)'];
+const CRITERIA_WEIGHTS = [40, 25, 15, 10, 10]; // %
+const CRITERIA_HIGHER_BETTER = [false, true, false, true, true];
+
+function OfferComparison() {
+  const [offers, setOffers] = useState([
+    { id:1, name:'Fournisseur A', vals:['','','','',''] },
+    { id:2, name:'Fournisseur B', vals:['','','','',''] },
+    { id:3, name:'Fournisseur C', vals:['','','','',''] },
+  ]);
+  const [weights, setWeights] = useState([...CRITERIA_WEIGHTS]);
+  const [result, setResult] = useState(null);
+
+  const setOffer = (id, field, val) => setOffers(prev=>prev.map(o=>o.id===id?{...o,[field]:val}:o));
+  const setOfferVal = (id, idx, val) => setOffers(prev=>prev.map(o=>o.id===id?{...o,vals:o.vals.map((v,i)=>i===idx?val:v)}:o));
+  const addOffer = () => setOffers(prev=>[...prev,{id:Date.now(),name:`Fournisseur ${String.fromCharCode(65+prev.length)}`,vals:['','','','','']}]);
+  const removeOffer = (id) => setOffers(prev=>prev.filter(o=>o.id!==id));
+
+  const compare = () => {
+    const scored = offers.map(o => {
+      const vals = o.vals.map(v=>parseFloat(v)||0);
+      const cols = CRITERIA.map((_,ci) => {
+        const allVals = offers.map(oo=>parseFloat(oo.vals[ci])||0).filter(v=>v>0);
+        if (!allVals.length) return 0;
+        const mn=Math.min(...allVals), mx=Math.max(...allVals);
+        if (mn===mx) return 100;
+        const norm = mx===mn?100:CRITERIA_HIGHER_BETTER[ci]
+          ? ((vals[ci]-mn)/(mx-mn))*100
+          : ((mx-vals[ci])/(mx-mn))*100;
+        return Math.round(Math.max(0,Math.min(100,norm)));
+      });
+      const score = cols.reduce((s,c,i)=>s+c*(weights[i]/100),0);
+      return { ...o, vals, cols, score: Math.round(score) };
+    }).sort((a,b)=>b.score-a.score);
+    setResult(scored);
+  };
+
+  const COLORS = ['#4f46e5','#059669','#d97706','#e11d48','#7c3aed','#0891b2'];
+
+  return (
+    <div>
+      <div className="calc-title">Comparatif d'offres multicritères</div>
+      <div className="calc-sub">Comparez jusqu'à 8 offres fournisseurs avec pondération personnalisable</div>
+
+      <div style={{marginBottom:14}}>
+        <div className="sidebar-label" style={{padding:0,marginBottom:8}}>Poids des critères (total = 100%)</div>
+        <div className="form-grid-3">
+          {CRITERIA.map((c,i)=>(
+            <div key={c} className="form-field">
+              <label>{c} — {weights[i]}%</label>
+              <input type="number" min="0" max="100" value={weights[i]}
+                onChange={e=>setWeights(prev=>{const nw=[...prev];nw[i]=parseInt(e.target.value)||0;return nw;})}/>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <hr className="section-sep"/>
+
+      <div style={{marginBottom:12}}>
+        <div className="sidebar-label" style={{padding:0,marginBottom:8}}>Offres fournisseurs</div>
+        <div style={{display:'grid',gridTemplateColumns:`140px repeat(${CRITERIA.length},1fr) 28px`,gap:6,marginBottom:6,padding:'0 0 4px',borderBottom:'1px solid var(--border)'}}>
+          <span style={{fontSize:10,fontWeight:700,color:'var(--text3)'}}>Fournisseur</span>
+          {CRITERIA.map(c=><span key={c} style={{fontSize:10,fontWeight:700,color:'var(--text3)',textAlign:'center'}}>{c}</span>)}
+          <span/>
+        </div>
+        {offers.map(o=>(
+          <div key={o.id} className="offer-input-row" style={{gridTemplateColumns:`140px repeat(${CRITERIA.length},1fr) 28px`}}>
+            <input type="text" value={o.name} onChange={e=>setOffer(o.id,'name',e.target.value)} placeholder="Nom fournisseur"/>
+            {CRITERIA.map((_,i)=>(
+              <input key={i} type="number" value={o.vals[i]} onChange={e=>setOfferVal(o.id,i,e.target.value)} placeholder="—" style={{textAlign:'center'}}/>
+            ))}
+            <button className="rm-offer" onClick={()=>removeOffer(o.id)} disabled={offers.length<=2}>×</button>
+          </div>
+        ))}
+        <button className="offers-add-btn" onClick={addOffer}>+ Ajouter une offre</button>
+      </div>
+
+      <div style={{display:'flex',gap:8,marginBottom:4}}>
+        <button className="calc-btn" onClick={compare}>Comparer les offres</button>
+        <button className="calc-btn-sec" onClick={()=>setResult(null)}>Réinitialiser</button>
+      </div>
+
+      {result && (
+        <div className="result-block">
+          <div className="rb-header">
+            <span style={{fontSize:16}}>🏆</span>
+            <span className="rb-title">Classement des offres</span>
+          </div>
+          <div className="rb-body">
+            {result.map((o,i)=>(
+              <div key={o.id} className="offer-row">
+                <div className={`offer-rank ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n'}`}>
+                  {i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}
+                </div>
+                <div className="offer-name">{o.name}</div>
+                <div className="offer-bar-wrap">
+                  <div className="offer-bar-track">
+                    <div className="offer-bar-fill" style={{width:`${o.score}%`,background:COLORS[i%COLORS.length]}}/>
+                  </div>
+                </div>
+                <div className="offer-price">{o.score}/100</div>
+                <div className="offer-score-badge" style={{background:`${COLORS[i%COLORS.length]}18`,color:COLORS[i%COLORS.length],border:`1px solid ${COLORS[i%COLORS.length]}33`}}>
+                  {o.score>=70?'✓ Recommandé':o.score>=50?'⚠ Acceptable':'✕ Insuffisant'}
+                </div>
+              </div>
+            ))}
+            <hr style={{border:'none',borderTop:'1px solid var(--border)',margin:'14px 0'}}/>
+            <div style={{overflowX:'auto'}}>
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
+                <thead>
+                  <tr>
+                    <th style={{padding:'6px 10px',background:'var(--surface2)',textAlign:'left',fontSize:10,fontWeight:600,borderBottom:'1px solid var(--border)'}}>Critère</th>
+                    {result.map(o=><th key={o.id} style={{padding:'6px 10px',background:'var(--surface2)',textAlign:'center',fontSize:10,fontWeight:600,borderBottom:'1px solid var(--border)'}}>{o.name}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {CRITERIA.map((c,ci)=>(
+                    <tr key={c}>
+                      <td style={{padding:'5px 10px',borderBottom:'1px solid var(--border)',color:'var(--text2)',fontWeight:500}}>{c} <span style={{fontSize:9,color:'var(--text3)'}}>({weights[ci]}%)</span></td>
+                      {result.map(o=><td key={o.id} style={{padding:'5px 10px',borderBottom:'1px solid var(--border)',textAlign:'center',fontWeight:o.cols[ci]===Math.max(...result.map(r=>r.cols[ci]))?700:400,color:o.cols[ci]===Math.max(...result.map(r=>r.cols[ci]))?'var(--indigo)':'var(--text2)'}}>{o.vals[ci]||'—'} <span style={{fontSize:9,color:'var(--text3)'}}>({o.cols[ci]}pts)</span></td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Savings Calculator ────────────────────────────────────────
+function SavingsCalc() {
+  const [form, setForm] = useState({ avant:'', apres:'', volume:'', type:'prix_unitaire' });
+  const [result, setResult] = useState(null);
+  const set = (k,v)=>setForm(p=>({...p,[k]:v}));
+
+  const calc = () => {
+    const avant=parseFloat(form.avant)||0, apres=parseFloat(form.apres)||0, volume=parseFloat(form.volume)||1;
+    if(!avant||!apres) return;
+    const ecart = avant-apres;
+    const pct = avant>0?(ecart/avant)*100:0;
+    const saving_total = form.type==='prix_unitaire' ? ecart*volume : ecart;
+    setResult({ avant, apres, ecart, pct: Math.abs(pct), saving_total, sens: ecart>0?'gain':'surcoût' });
+  };
+
+  return (
+    <div>
+      <div className="calc-title">Calcul d'économies</div>
+      <div className="calc-sub">Mesurez l'impact financier d'une négociation ou d'un changement de fournisseur</div>
+      <div className="form-grid">
+        <div className="form-field">
+          <label>Type de comparaison</label>
+          <select value={form.type} onChange={e=>set('type',e.target.value)}>
+            <option value="prix_unitaire">Prix unitaire (€/unité)</option>
+            <option value="total">Montant total (€)</option>
+          </select>
+        </div>
+        <div className="form-field">
+          <label>Volume / Quantité{form.type==='total'?' (optionnel)':''}</label>
+          <input type="number" value={form.volume} onChange={e=>set('volume',e.target.value)} placeholder={form.type==='total'?'1':'100'}/>
+        </div>
+        <div className="form-field">
+          <label>Valeur avant (€{form.type==='prix_unitaire'?'/u':''})</label>
+          <div className="input-prefix-wrap"><span className="input-prefix">€</span><input type="number" value={form.avant} onChange={e=>set('avant',e.target.value)} placeholder="Prix initial"/></div>
+        </div>
+        <div className="form-field">
+          <label>Valeur après négociation (€{form.type==='prix_unitaire'?'/u':''})</label>
+          <div className="input-prefix-wrap"><span className="input-prefix">€</span><input type="number" value={form.apres} onChange={e=>set('apres',e.target.value)} placeholder="Prix négocié"/></div>
+        </div>
+      </div>
+      <button className="calc-btn" onClick={calc}>Calculer l'économie</button>
+      {result && (
+        <div className="result-block" style={{marginTop:16}}>
+          <div className="rb-header">
+            <span style={{fontSize:16}}>{result.sens==='gain'?'💚':'🔴'}</span>
+            <span className="rb-title">{result.sens==='gain'?'Économie réalisée':'Surcoût identifié'}</span>
+          </div>
+          <div className="rb-body">
+            <div className="kpi-row">
+              <div className="kpi-card" style={result.sens==='gain'?{background:'#f0fdf4',borderColor:'#bbf7d0'}:{background:'#fff1f2',borderColor:'#fecdd3'}}>
+                <div className="kpi-val" style={{color:result.sens==='gain'?'var(--emerald)':'var(--rose)'}}>{Math.abs(result.saving_total).toLocaleString('fr-FR')} €</div>
+                <div className="kpi-lbl">{result.sens==='gain'?'Économie totale':'Surcoût total'}</div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-val" style={{color:result.sens==='gain'?'var(--emerald)':'var(--rose)'}}>{result.pct.toFixed(1)} %</div>
+                <div className="kpi-lbl">Variation en %</div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-val">{Math.abs(result.ecart).toLocaleString('fr-FR')} €</div>
+                <div className="kpi-lbl">Écart {form.type==='prix_unitaire'?'unitaire':'total'}</div>
+              </div>
+            </div>
+            <div className="md"><p>Passage de <strong>{result.avant.toLocaleString('fr-FR')} €</strong> à <strong>{result.apres.toLocaleString('fr-FR')} €</strong> — soit une {result.sens} de <strong>{result.pct.toFixed(2)}%</strong>{form.type==='prix_unitaire'?' sur un volume de '+parseFloat(form.volume||1)+' unités':''}.</p></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Calculators tab ──────────────────────────────────────────
+const CALC_TOOLS = [
+  { id:'tco', emoji:'🔢', label:'TCO', desc:'Coût total de possession' },
+  { id:'offres', emoji:'🏆', label:'Comparatif offres', desc:'Scoring multicritères' },
+  { id:'savings', emoji:'💚', label:'Économies', desc:'Calcul de savings' },
+];
+function CalculateursTab() {
+  const [active, setActive] = useState('tco');
+  return (
+    <div className="calc-wrap">
+      <div className="calc-sidebar">
+        <div className="calc-nav-lbl">Outils de calcul</div>
+        {CALC_TOOLS.map(t=>(
+          <button key={t.id} className={`calc-nav-item ${active===t.id?'active':''}`} onClick={()=>setActive(t.id)}>
+            <span className="ci">{t.emoji}</span>
+            <div>
+              <div style={{fontSize:12,fontWeight:600}}>{t.label}</div>
+              <div style={{fontSize:10,color:'var(--text3)',marginTop:1}}>{t.desc}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+      <div className="calc-main">
+        {active==='tco' && <TcoCalc/>}
+        {active==='offres' && <OfferComparison/>}
+        {active==='savings' && <SavingsCalc/>}
+      </div>
+    </div>
+  );
+}
+
+// ── Main App ──────────────────────────────────────────────────
+function AchatPro() {
+  const [mainTab, setMainTab] = useState('analyse');
+  const [activeStep, setActiveStep] = useState('analyse');
+  const [isDragging, setIsDragging] = useState(false);
+  const [file, setFile] = useState(null);
+  const [docType, setDocType] = useState(null);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [activeAction, setActiveAction] = useState(null);
+  const [promptOverrides, setPromptOverrides] = useState({});
+  const [history, setHistory] = useState([]);
+  const [toast, setToast] = useState({ msg:'', show:false });
+  const [loadingMsg, setLoadingMsg] = useState('Analyse en cours');
+  const fileRef = useRef();
+  const toastRef = useRef();
+
+  const { useTweaks, TweaksPanel, TweakSection, TweakToggle, TweakColor } = window;
+  const [tweaks, setTweak] = useTweaks(/*EDITMODE-BEGIN*/{"showHistory":true,"accentColor":"#4f46e5"}/*EDITMODE-END*/);
+
+  const showToast = useCallback((msg) => {
+    clearTimeout(toastRef.current);
+    setToast({ msg, show: true });
+    toastRef.current = setTimeout(() => setToast(t=>({...t,show:false})), 2800);
+  }, []);
+
+  const setPromptOverride = useCallback((id, val) => {
+    setPromptOverrides(p => {
+      const next = {...p};
+      if (val === null) delete next[id]; else next[id] = val;
+      return next;
+    });
+  }, []);
+
+  const LOADING_MSGS = ['Lecture du document…','Extraction des données…','Application des règles métier…','Génération en cours…','Finalisation…'];
+
+  const runAction = useCallback(async (actionId) => {
+    if (!file) { showToast('⚠️ Déposez d\'abord un document'); return; }
+    setActiveAction(actionId);
+    setLoading(true);
+    setResult(null);
+    let idx=0;
+    setLoadingMsg(LOADING_MSGS[0]);
+    const iv = setInterval(()=>{ idx=(idx+1)%LOADING_MSGS.length; setLoadingMsg(LOADING_MSGS[idx]); }, 1800);
+    const docInfo = DOC_TYPES[docType] || DOC_TYPES.autre;
+    const defaultFn = DEFAULT_PROMPTS[actionId] || ((d,c)=>`Analyse ce document achat (${d}):\n${c}`);
+    const defaultPrompt = defaultFn(docInfo.label, file.content);
+    const tplOverride = promptOverrides[actionId];
+    const prompt = tplOverride
+      ? tplOverride.replace('[Type de document]', docInfo.label).replace('[Contenu du document]', file.content)
+      : defaultPrompt;
+    try {
+      const text = await window.claude.complete({ messages:[{role:'user',content:prompt}] });
+      clearInterval(iv);
+      setResult({ text });
+      const aInfo = ACTION_GROUPS.flatMap(g=>g.actions).find(a=>a.id===actionId);
+      setHistory(h=>[{id:Date.now(),emoji:aInfo?.emoji||'📄',label:`${aInfo?.label} — ${file.name}`,time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),result:{text},action:actionId,docType},...h.slice(0,9)]);
+      showToast('✅ Analyse terminée');
+    } catch(e) {
+      clearInterval(iv);
+      setResult({ text:`## Erreur\n\nUne erreur est survenue : ${e.message}` });
+    }
+    setLoading(false);
+  }, [file, docType, promptOverrides, showToast]);
+
+  const handleFile = useCallback((name, content) => {
+    const dt = detectDocType(name, content);
+    setFile({ name, content, type: dt });
+    setDocType(dt);
+    setResult(null); setActiveAction(null);
+    showToast(`${DOC_TYPES[dt].emoji} Document chargé — ${DOC_TYPES[dt].label} détecté`);
+    const stepMap = {cdc:'rfp',offre:'analyse',contrat:'contrat',facture:'suivi',bc:'suivi',devis:'analyse',audit:'eval',email:'nego'};
+    if (stepMap[dt]) setActiveStep(stepMap[dt]);
+  }, [showToast]);
+
+  const onDrop = useCallback(e=>{
+    e.preventDefault(); setIsDragging(false);
+    const f=e.dataTransfer?.files?.[0]; if(!f) return;
+    const reader=new FileReader();
+    reader.onload=ev=>handleFile(f.name,ev.target.result||f.name);
+    reader.readAsText(f);
+  },[handleFile]);
+
+  const onFileChange = useCallback(e=>{
+    const f=e.target.files?.[0]; if(!f) return;
+    const reader=new FileReader();
+    reader.onload=ev=>handleFile(f.name,ev.target.result||f.name);
+    reader.readAsText(f);
+  },[handleFile]);
+
+  const loadDemo = () => {
+    const demo=`PROPOSITION COMMERCIALE — ProtecSafe Solutions\nRef: PS-2026-0412 | Date: 25 avril 2026\n\nFOURNITURE EPI INDUSTRIELS:\n- Gants anti-coupures EN388 niv.4544: 500 paires → 12,50€/u = 6 250€ HT\n- Lunettes EN166 anti-rayures: 300 u → 8,90€/u = 2 670€ HT\n- Casques EN397 cl.E: 150 u → 24,00€/u = 3 600€ HT\n\nTOTAL: 12 520€ HT\n\nCONDITIONS:\n- Délai livraison: 2 semaines\n- Garantie: 18 mois\n- Paiement souhaité: 30 jours fin de mois\n- Validité offre: 30 jours\n\nCERTIFICATIONS: ISO 9001, OHSAS 18001\n45 clients industriels actifs`;
+    handleFile('offre_EPI_ProtecSafe.txt', demo);
+  };
+
+  const docInfo = file ? (DOC_TYPES[docType]||DOC_TYPES.autre) : null;
+  const NAV_TABS = [{id:'analyse',label:'Analyse documents'},{id:'calculateurs',label:'Calculateurs'}];
+
+  return (
+    <div id="root" style={{'--indigo':tweaks.accentColor,'--indigo-l':tweaks.accentColor+'18','--indigo-m':tweaks.accentColor+'44'}}>
+      {/* Topbar */}
+      <header className="topbar">
+        <div className="logo">
+          <div className="logo-mark">A</div>
+          AchatPro
+        </div>
+        <nav className="topbar-nav">
+          {NAV_TABS.map(t=>(
+            <button key={t.id} className={`nav-tab ${mainTab===t.id?'active':''}`} onClick={()=>setMainTab(t.id)}>{t.label}</button>
+          ))}
+        </nav>
+        <div className="topbar-right">
+          <div className="status-dot"/>
+          <span className="status-label">IA active</span>
+          <span className="chip chip-beta">Beta</span>
+        </div>
+      </header>
+
+      {/* Pipeline */}
+      <nav className="pipeline">
+        {PIPELINE.map((step,i)=>(
+          <div key={step.id} className="pip-step">
+            <div className={`pip-inner ${activeStep===step.id?'active':''}`} onClick={()=>setActiveStep(step.id)}>
+              <div className={`pip-num ${activeStep===step.id?'active':'idle'}`}>{i+1}</div>
+              <span className={`pip-label ${activeStep===step.id?'active':'idle'}`}>{step.emoji} {step.label}</span>
+            </div>
+            {i<PIPELINE.length-1 && <span className="pip-arrow">›</span>}
+          </div>
+        ))}
+      </nav>
+
+      {/* Main */}
+      <div className="main">
+        {/* Sidebar — always visible */}
+        <div className="sidebar">
+          <div className="sidebar-section"><div className="sidebar-label">Document source</div></div>
+
+          {!file ? (
+            <>
+              <div className={`drop-zone ${isDragging?'drag':''}`}
+                onDragOver={e=>{e.preventDefault();setIsDragging(true);}}
+                onDragLeave={()=>setIsDragging(false)}
+                onDrop={onDrop}
+                onClick={()=>fileRef.current?.click()}
+              >
+                <span className="dz-icon">{isDragging?'📂':'📁'}</span>
+                <div className="dz-title">Glissez un document ici</div>
+                <div className="dz-sub">ou cliquez pour parcourir</div>
+                <div className="fmt-row">
+                  {['TXT','PDF','DOCX','CSV','Email'].map(f=><span key={f} className="fmt-chip">{f}</span>)}
+                </div>
+                <input ref={fileRef} type="file" style={{display:'none'}} onChange={onFileChange}/>
+              </div>
+              <button className="demo-btn" onClick={loadDemo}>🧪 Charger un document démo</button>
+            </>
+          ) : (
+            <div className="file-card">
+              <div className="file-icon">{docInfo.emoji}</div>
+              <div className="file-info">
+                <div className="file-name">{file.name}</div>
+                <div className="file-tag">✓ {docInfo.label}</div>
+              </div>
+              <button className="file-rm" onClick={()=>{setFile(null);setDocType(null);setResult(null);setActiveAction(null);}}>×</button>
+            </div>
+          )}
+
+          {mainTab==='analyse' && (
+            <div className="actions-scroll">
+              {ACTION_GROUPS.map(group=>(
+                <div key={group.label}>
+                  <div className="ag-label">{group.label}</div>
+                  {group.actions.map(action=>(
+                    <ActionItem key={action.id} action={action} fileLoaded={!!file}
+                      loading={loading} activeAction={activeAction}
+                      onRun={runAction} promptOverrides={promptOverrides}
+                      setPromptOverride={setPromptOverride}/>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {mainTab==='calculateurs' && (
+            <div className="actions-scroll">
+              <div className="ag-label" style={{marginTop:8}}>Outils disponibles</div>
+              {CALC_TOOLS.map(t=>(
+                <div key={t.id} style={{padding:'8px 10px',borderRadius:6,border:'1px solid var(--border)',marginBottom:5,background:'var(--surface2)',fontSize:12,color:'var(--text2)'}}>
+                  {t.emoji} <strong style={{color:'var(--text)'}}>{t.label}</strong><br/>
+                  <span style={{fontSize:10,color:'var(--text3)'}}>{t.desc}</span>
+                </div>
+              ))}
+              <div style={{marginTop:12,padding:'10px',borderRadius:6,background:'var(--indigo-l)',border:'1px solid var(--indigo-m)'}}>
+                <div style={{fontSize:11,fontWeight:600,color:'var(--indigo)',marginBottom:4}}>💡 Astuce</div>
+                <div style={{fontSize:10,color:'var(--text2)',lineHeight:1.5}}>Utilisez le comparatif d'offres pour scorer vos fournisseurs avant négociation.</div>
+              </div>
+            </div>
+          )}
+
+          {tweaks.showHistory && history.length>0 && (
+            <div className="history-foot">
+              <div className="hist-label">Historique</div>
+              {history.slice(0,4).map(h=>(
+                <div key={h.id} className="hist-item" onClick={()=>{setResult(h.result);setActiveAction(h.action);setDocType(h.docType);setMainTab('analyse');}}>
+                  <span className="hist-em">{h.emoji}</span>
+                  <span className="hist-text">{h.label}</span>
+                  <span className="hist-time">{h.time}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Workspace */}
+        <div className="workspace">
+          {mainTab==='analyse' && (
+            <>
+              <div className="ws-toolbar">
+                <div className="ws-title">
+                  {result ? '📋 Résultats' : file ? '← Choisissez une action' : 'Espace de travail'}
+                </div>
+                {result && (
+                  <div className="ws-btns">
+                    <button className="btn-sm" onClick={()=>setResult(null)}>↩ Nouvelle analyse</button>
+                    <button className="btn-sm primary" onClick={()=>navigator.clipboard?.writeText(result.text).then(()=>showToast('📋 Copié !'))}>📋 Copier</button>
+                  </div>
+                )}
+              </div>
+              <div className="result-wrap">
+                {loading && (
+                  <div className="loading-state">
+                    <div className="spinner"/>
+                    <div className="loading-msg">{loadingMsg}<span className="dots"><span>.</span><span>.</span><span>.</span></span></div>
+                    <div className="loading-sub">AchatPro analyse votre document</div>
+                  </div>
+                )}
+                {!loading && !result && (
+                  <div className="placeholder">
+                    <div className="ph-icon">🗂️</div>
+                    <div className="ph-title">Glissez un document pour commencer</div>
+                    <div className="ph-sub">Déposez un fichier dans la colonne de gauche, puis choisissez une action d'analyse.</div>
+                    <div className="ph-grid">
+                      {[{ico:'📊',lbl:'Score fournisseur',dsc:'Notation multicritère'},{ico:'🚨',lbl:'Risques détectés',dsc:'Clauses dangereuses'},{ico:'🤝',lbl:'Leviers de négo',dsc:'Préparez vos arguments'},{ico:'✅',lbl:'Checklist',dsc:'Ne ratez rien'},{ico:'✉️',lbl:'Email rédigé',dsc:'Réponse en 5 sec'},{ico:'🎯',lbl:'Recommandation',dsc:'Décision argumentée'}].map(c=>(
+                        <div key={c.lbl} className="ph-card">
+                          <span className="ico">{c.ico}</span>
+                          <div className="lbl">{c.lbl}</div>
+                          <div className="dsc">{c.dsc}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {!loading && result && (
+                  <ResultView result={result} action={activeAction} docType={docType}
+                    onCopy={()=>navigator.clipboard?.writeText(result.text).then(()=>showToast('📋 Copié !'))}/>
+                )}
+              </div>
+            </>
+          )}
+          {mainTab==='calculateurs' && (
+            <>
+              <div className="ws-toolbar">
+                <div className="ws-title">🔢 Calculateurs achat</div>
+              </div>
+              <CalculateursTab/>
+            </>
+          )}
+        </div>
+      </div>
+
+      <TweaksPanel>
+        <TweakSection title="Thème">
+          <TweakColor label="Couleur principale" id="accentColor" tweaks={tweaks} setTweak={setTweak}/>
+        </TweakSection>
+        <TweakSection title="Interface">
+          <TweakToggle label="Afficher l'historique" id="showHistory" tweaks={tweaks} setTweak={setTweak}/>
+        </TweakSection>
+      </TweaksPanel>
+
+      <div className={`toast ${toast.show?'show':''}`}>{toast.msg}</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<AchatPro/>);
+</script>
+</body>
+</html>

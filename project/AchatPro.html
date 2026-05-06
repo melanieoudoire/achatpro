@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AchatPro — Copilote IA Achats</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+:root{
+  --bg:#F5F1EA;--card:#FAF7F2;--card2:#E8DFD3;
+  --sl:#A8B89B;--s:#7A8B6F;--sd:#3D4A3D;
+  --tx:#5A5A52;--txs:#3D4A3D;--txm:#9A9A8E;
+  --gold:#C9A961;--terra:#B85C3E;
+  --bdr:rgba(122,139,111,0.15);
+  --sh:0 2px 12px rgba(60,70,60,0.06);
+  --shm:0 4px 24px rgba(60,70,60,0.10);
+  --r:16px;--rsm:10px;
+  --pad:24px;--gap:14px;--fs:13px;--ttl:22px;
+}
+/* Densité — Compact / Confort / Spacieux */
+[data-density="compact"]{--pad:16px;--gap:9px;--fs:12px;--ttl:19px;--r:11px;--rsm:7px}
+[data-density="cosy"]{--pad:24px;--gap:14px;--fs:13px;--ttl:22px}
+[data-density="airy"]{--pad:36px;--gap:22px;--fs:14px;--ttl:28px;--r:22px;--rsm:14px}
+[data-density="airy"] .card{padding:24px}
+[data-density="airy"] .kpi{padding:22px}
+[data-density="compact"] .card{padding:11px 13px}
+[data-density="compact"] .kpi{padding:11px 13px}
+[data-density="compact"] .kpi-v{font-size:20px}
+[data-density="airy"] .kpi-v{font-size:32px}
+
+/* Ambiance — palette moods */
+[data-ambiance="terre"]{--bg:#F5F1EA;--card:#FAF7F2;--card2:#E8DFD3;--sl:#A8B89B;--s:#7A8B6F;--sd:#3D4A3D;--gold:#C9A961;--terra:#B85C3E}
+[data-ambiance="aube"]{--bg:#F4EDE5;--card:#FBF6EE;--card2:#E8D7C2;--sl:#E0AD8F;--s:#C77F58;--sd:#5C3A2A;--gold:#D9A14A;--terra:#A8412B}
+[data-ambiance="ardoise"]{--bg:#EEF1F2;--card:#F8FAFA;--card2:#D9DFE2;--sl:#90A0A8;--s:#5E7480;--sd:#1F2D33;--gold:#A88E5C;--terra:#A14B3E}
+[data-ambiance="encre"]{--bg:#1F1F22;--card:#2A2B2E;--card2:#34353A;--sl:#9CB6E0;--s:#6B8AB8;--sd:#E8ECF2;--tx:#C8CED8;--txs:#E8ECF2;--txm:#7A7E88;--gold:#D4B36A;--terra:#D87A5E;--bdr:rgba(156,182,224,0.14);--sh:0 2px 12px rgba(0,0,0,0.3);--shm:0 4px 28px rgba(0,0,0,0.45)}
+
+/* Personnalité — type system */
+[data-perso="botanique"]{--ff-h:Georgia,'Playfair Display',serif;--ff-b:Inter,system-ui,sans-serif;--lg-shape:8px}
+[data-perso="editorial"]{--ff-h:'Times New Roman',Georgia,serif;--ff-b:Georgia,serif;--lg-shape:2px}
+[data-perso="editorial"] .kpi-v,[data-perso="editorial"] h1,[data-perso="editorial"] h2{letter-spacing:-0.02em;font-style:italic}
+[data-perso="editorial"] .badge{border-radius:2px!important;text-transform:uppercase;letter-spacing:1px}
+[data-perso="tech"]{--ff-h:'Inter','SF Pro Display',system-ui,sans-serif;--ff-b:'Inter',system-ui,sans-serif;--lg-shape:6px;--r:8px;--rsm:6px}
+[data-perso="tech"] .kpi-v,[data-perso="tech"] h1,[data-perso="tech"] h2{font-family:'Inter',system-ui,sans-serif!important;font-weight:800;letter-spacing:-0.03em}
+[data-perso="tech"] .badge{font-family:'JetBrains Mono','Courier New',monospace;text-transform:lowercase}
+
+body{font-family:var(--ff-b,Inter,system-ui,sans-serif)}
+h1,h2,h3,.kpi-v{font-family:var(--ff-h,Georgia,serif)}
+.dark{
+  --bg:#2A2D26;--card:#363A33;--card2:#2F3229;
+  --bdr:rgba(168,184,155,0.12);
+  --tx:#C8C8B8;--txs:#E8E8D8;--txm:#7A7A68;
+  --sh:0 2px 12px rgba(0,0,0,0.2);--shm:0 4px 24px rgba(0,0,0,0.3);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;line-height:1.5}
+#root{height:100vh;display:flex;overflow:hidden}
+
+.sidebar{width:240px;flex-shrink:0;background:var(--card);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-logo{padding:18px 16px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bdr)}
+.logo-text{font-family:Georgia,serif;font-weight:700;font-size:17px;color:var(--sd)}
+.logo-sub{font-size:10px;color:var(--txm);letter-spacing:.5px;text-transform:uppercase}
+.snav{flex:1;overflow-y:auto;padding:6px 8px;scrollbar-width:thin;scrollbar-color:var(--bdr) transparent}
+.sec-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--txm);padding:8px 8px 3px}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;cursor:pointer;border:none;background:none;width:100%;text-align:left;color:var(--tx);font-size:12.5px;font-weight:500;transition:all .13s}
+.ni:hover{background:rgba(122,139,111,0.09);color:var(--sd)}
+.ni.active{background:rgba(122,139,111,0.14);color:var(--sd);font-weight:700}
+.ni-prompts{background:rgba(201,169,97,0.09) !important;border:1px solid rgba(201,169,97,0.22) !important}
+.ni-prompts:hover,.ni-prompts.active{background:rgba(201,169,97,0.16) !important}
+.sfooter{padding:10px;border-top:1px solid var(--bdr)}
+.ucard{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;cursor:pointer;transition:background .13s}
+.ucard:hover{background:rgba(122,139,111,0.07)}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--sl),var(--s));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.uname{font-size:12px;font-weight:600;color:var(--txs)}
+.urole{font-size:10px;color:var(--txm)}
+
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:56px;background:var(--card);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 22px;gap:14px;flex-shrink:0}
+.breadcrumb{font-size:13px;color:var(--txm);flex:1;display:flex;align-items:center;gap:5px}
+.breadcrumb strong{color:var(--txs);font-weight:600}
+.tsearch{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--bdr);border-radius:30px;padding:5px 13px;width:270px}
+.tsearch input{background:none;border:none;outline:none;font-size:12px;color:var(--tx);width:100%}
+.tsearch input::placeholder{color:var(--txm)}
+.tbtn{width:32px;height:32px;border-radius:7px;border:1px solid var(--bdr);background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txm);font-size:14px;transition:all .13s}
+.tbtn:hover{border-color:var(--sl);color:var(--sd)}
+
+.content-area{display:flex;flex:1;overflow:hidden}
+.content{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bdr) transparent}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--bdr);box-shadow:var(--sh)}
+.cp{padding:18px 20px}
+.csm{padding:12px 14px}
+.card-hover{transition:all .18s;cursor:pointer}
+.card-hover:hover{box-shadow:var(--shm);transform:translateY(-2px)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;transition:all .16s}
+.btn-p{background:var(--s);color:#fff}.btn-p:hover{background:var(--sd);transform:translateY(-1px);box-shadow:0 4px 12px rgba(122,139,111,0.3)}
+.btn-s{background:transparent;color:var(--s);border:1.5px solid var(--s)}.btn-s:hover{background:rgba(122,139,111,0.07)}
+.btn-g{background:transparent;color:var(--txm);border:1px solid var(--bdr);font-size:11.5px;padding:6px 12px}.btn-g:hover{color:var(--sd);border-color:var(--sl)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700}
+.b-sage{background:rgba(168,184,155,0.22);color:var(--sd);border:1px solid rgba(122,139,111,0.18)}
+.b-gold{background:rgba(201,169,97,0.14);color:#8A5E10;border:1px solid rgba(201,169,97,0.28)}
+.b-terra{background:rgba(184,92,62,0.10);color:var(--terra);border:1px solid rgba(184,92,62,0.2)}
+.b-muted{background:rgba(154,154,142,0.10);color:var(--txm);border:1px solid var(--bdr)}
+.b-sys{background:rgba(61,74,61,0.09);color:var(--sd);border:1px solid rgba(61,74,61,0.18)}
+.b-team{background:rgba(122,139,111,0.11);color:var(--s);border:1px solid rgba(122,139,111,0.22)}
+.b-perso{background:rgba(201,169,97,0.11);color:#8A5E10;border:1px solid rgba(201,169,97,0.28)}
+
+/* KPI */
+.kpi{background:var(--card);border-radius:var(--r);border:1px solid var(--bdr);padding:16px 18px;box-shadow:var(--sh);transition:all .18s;cursor:default}
+.kpi:hover{box-shadow:var(--shm);transform:translateY(-2px)}
+.kpi-v{font-family:Georgia,serif;font-size:24px;font-weight:700;color:var(--sd);margin:5px 0 2px}
+.kpi-l{font-size:11px;color:var(--txm);font-weight:500}
+.kpi-d{font-size:11px;font-weight:600;margin-top:3px}
+.up{color:var(--s)}.dn{color:var(--terra)}
+
+/* Grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* Input */
+.inp{width:100%;padding:7px 11px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg);color:var(--tx);font-size:12.5px;outline:none;font-family:inherit;transition:border-color .14s}
+.inp:focus{border-color:var(--sl);box-shadow:0 0 0 3px rgba(122,139,111,0.08)}
+textarea.inp{resize:vertical;min-height:80px;line-height:1.6}
+
+/* Chip */
+.chip{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bdr);background:var(--bg);color:var(--tx);transition:all .13s}
+.chip:hover,.chip.on{background:var(--s);color:#fff;border-color:var(--s)}
+
+/* Progress */
+.ptrack{height:5px;background:var(--card2);border-radius:10px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--s),var(--sl));border-radius:10px;transition:width .8s ease}
+
+/* Steps */
+.steprow{display:flex;align-items:flex-start;gap:0;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.steprow::-webkit-scrollbar{display:none}
+.snum{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid var(--bdr);flex-shrink:0;transition:all .18s}
+.snum.done{background:var(--s);border-color:var(--s);color:#fff}
+.snum.active{background:var(--sd);border-color:var(--sd);color:#fff;box-shadow:0 0 0 4px rgba(122,139,111,0.18)}
+.snum.idle{background:var(--bg);color:var(--txm)}
+.sconn{width:36px;height:2px;flex-shrink:0;margin-top:13px;background:var(--bdr)}
+.sconn.done{background:var(--s)}
+.slbl{font-size:9.5px;font-weight:600;margin-top:4px;text-align:center;color:var(--txm);max-width:60px}
+.slbl.on{color:var(--sd)}
+
+/* IA Panel */
+.ia-panel{width:320px;flex-shrink:0;background:var(--card);border-left:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden}
+.ia-panel.shut{width:0;border:none}
+.ia-hdr{padding:12px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:9px;flex-shrink:0}
+.ia-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:7px;scrollbar-width:thin}
+.bub{padding:9px 12px;border-radius:10px;font-size:11.5px;line-height:1.6}
+.bub-ai{background:rgba(168,184,155,0.18);color:var(--txs);border-radius:3px 10px 10px 10px}
+.bub-u{background:var(--sd);color:#fff;border-radius:10px 3px 10px 10px}
+.ia-sug{padding:7px 10px;border-top:1px solid var(--bdr);flex-shrink:0}
+.ia-sug-lbl{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--txm);margin-bottom:5px}
+.sugg{display:block;width:100%;text-align:left;padding:5px 8px;border-radius:7px;background:rgba(168,184,155,0.1);border:1px solid rgba(122,139,111,0.13);font-size:11px;color:var(--sd);cursor:pointer;margin-bottom:4px;transition:all .12s}
+.sugg:hover{background:rgba(122,139,111,0.14)}
+.ia-inp-row{padding:8px 10px;border-top:1px solid var(--bdr);display:flex;gap:6px;flex-shrink:0}
+.ia-inp{flex:1;padding:6px 9px;border-radius:7px;border:1px solid var(--bdr);background:var(--bg);font-size:11.5px;color:var(--tx);outline:none}
+.ia-send{width:30px;height:30px;border-radius:7px;background:var(--s);border:none;color:#fff;cursor:pointer;font-size:14px;transition:all .13s}
+.ia-send:hover{background:var(--sd)}
+
+/* Prompt card */
+.pcard{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rsm);padding:12px 14px;cursor:pointer;transition:all .16s;margin-bottom:7px}
+.pcard:hover,.pcard.sel{border-color:var(--s);box-shadow:0 0 0 2px rgba(122,139,111,0.08)}
+.pcard.sel{background:rgba(122,139,111,0.03)}
+
+/* Kanban */
+.kcol{background:var(--bg);border-radius:var(--rsm);border:1px solid var(--bdr);padding:10px;min-height:180px}
+.khdr{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--txm);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.kcard{background:var(--card);border:1px solid var(--bdr);border-radius:7px;padding:9px 11px;margin-bottom:6px;cursor:pointer;font-size:11.5px;transition:all .13s}
+.kcard:hover{border-color:var(--sl);box-shadow:var(--sh);transform:translateY(-1px)}
+
+/* Divider */
+hr.div{border:none;border-top:1px solid var(--bdr);margin:14px 0}
+
+/* Prompt content */
+.pcontent{font-family:monospace;font-size:11.5px;line-height:1.75;color:var(--tx);background:var(--bg);padding:13px;border-radius:8px;border:1px solid var(--bdr);white-space:pre-wrap;word-break:break-word}
+
+/* Alert */
+.aitem{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-radius:var(--rsm);border:1px solid var(--bdr);background:var(--card);margin-bottom:7px;transition:all .14s;cursor:pointer}
+.aitem:hover{box-shadow:var(--sh);border-color:var(--sl)}
+
+/* Split */
+.split{display:flex;flex:1;overflow:hidden}
+.sl-left{flex:1;overflow-y:auto;border-right:1px solid var(--bdr);padding:18px 20px;scrollbar-width:thin}
+.sl-right{width:300px;flex-shrink:0;overflow-y:auto;padding:18px;background:var(--card);scrollbar-width:thin}
+
+/* Tabs */
+.tab-row{display:flex;gap:5px;margin-bottom:14px}
+.tab{padding:5px 14px;border-radius:20px;border:1.5px solid var(--bdr);background:transparent;color:var(--txm);font-size:12px;font-weight:500;cursor:pointer;transition:all .12s}
+.tab.on{border-color:var(--s);background:rgba(122,139,111,0.09);color:var(--sd);font-weight:700}
+
+/* FAB */
+.fab{position:fixed;bottom:22px;right:22px;width:42px;height:42px;border-radius:50%;background:var(--sd);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(61,74,61,0.28);transition:all .18s;z-index:100;font-size:18px;color:#fff}
+.fab:hover{background:var(--s);transform:scale(1.08)}
+
+/* Anim */
+@keyframes fi{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:fi .22s ease}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin 1s linear infinite}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:10px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useState, useRef, useEffect, useCallback } = React;
+
+// ── Palette ─────────────────────────────────────────────────
+const P = {
+  s:'#7A8B6F', sl:'#A8B89B', sd:'#3D4A3D',
+  gold:'#C9A961', terra:'#B85C3E',
+  bg:'#F5F1EA', card:'#FAF7F2', tx:'#5A5A52'
+};
+const CC = ['#7A8B6F','#3D4A3D','#C9A961','#B85C3E','#A8B89B','#8B7A6F','#6F8B82'];
+
+// ── SVG Charts ───────────────────────────────────────────────
+function AreaChart({data, k1, k2, c1=P.s, c2=P.gold, h=150}){
+  const W=600, H=h*2;
+  const v1=data.map(d=>+d[k1]||0), v2=k2?data.map(d=>+d[k2]||0):[];
+  const allV=[...v1,...v2]; const mn=Math.min(...allV), mx=Math.max(...allV)||1, rng=mx-mn;
+  const px=(v,i)=>[i/(data.length-1)*(W-40)+20, H-20-(v-mn)/rng*(H-40)];
+  const path=(vals)=>vals.map((v,i)=>{ const [x,y]=px(v,i); return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1); }).join(' ');
+  const area=(vals,color)=>{ const p=path(vals); const [lx]=px(vals[vals.length-1],vals.length-1); const [fx]=px(vals[0],0); return `${p} L${lx.toFixed(1)} ${H-20} L${fx.toFixed(1)} ${H-20} Z`; };
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:h}} preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={c1} stopOpacity=".18"/><stop offset="100%" stopColor={c1} stopOpacity=".01"/></linearGradient>
+        <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={c2} stopOpacity=".22"/><stop offset="100%" stopColor={c2} stopOpacity=".01"/></linearGradient>
+      </defs>
+      {[0,.25,.5,.75,1].map(f=><line key={f} x1="20" y1={(H-20-(H-40)*f).toFixed(1)} x2={W-20} y2={(H-20-(H-40)*f).toFixed(1)} stroke="rgba(122,139,111,0.08)" strokeWidth="1"/>)}
+      <path d={area(v1,c1)} fill="url(#g1)"/>
+      {k2&&<path d={area(v2,c2)} fill="url(#g2)"/>}
+      <path d={path(v1)} fill="none" stroke={c1} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      {k2&&<path d={path(v2)} fill="none" stroke={c2} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+      {data.map((d,i)=>{
+        const [x]=px(v1[i],i);
+        return i%3===0 ? <text key={i} x={x} y={H} textAnchor="middle" fontSize="18" fill={P.tx} opacity=".6">{d.month||d.name||''}</text> : null;
+      })}
+    </svg>
+  );
+}
+
+function BarChart({data, dk, h=160, multi=false, keys=[], colors=CC}){
+  const W=580, H=h*2;
+  const vals=multi?data.flatMap(d=>keys.map(k=>+d[k]||0)):data.map(d=>+d[dk]||0);
+  const mx=Math.max(...vals)||1;
+  const n=data.length, bw=W/n, pad=bw*.14;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:h}} preserveAspectRatio="none">
+      {[0,.25,.5,.75,1].map(f=><line key={f} x1="0" y1={(H-20-(H-40)*f).toFixed(1)} x2={W} y2={(H-20-(H-40)*f).toFixed(1)} stroke="rgba(122,139,111,0.07)" strokeWidth="1"/>)}
+      {data.map((d,i)=>{
+        if(multi) return keys.map((k,ki)=>{
+          const v=(+d[k]||0)/mx*(H-40); const subW=(bw-pad*2)/keys.length;
+          const x=i*bw+pad+ki*subW; const y=H-20-v;
+          return <rect key={k} x={x} y={y} width={subW-2} height={v} fill={colors[ki]} rx="3"/>;
+        });
+        const v=(+d[dk]||0)/mx*(H-40); const x=i*bw+pad; const y=H-20-v;
+        return <rect key={i} x={x} y={y} width={bw-pad*2} height={v} fill={CC[i%CC.length]} rx="3"/>;
+      })}
+      {data.map((d,i)=>{
+        const x=i*bw+bw/2;
+        return i%2===0?<text key={i} x={x} y={H+2} textAnchor="middle" fontSize="16" fill={P.tx} opacity=".55">{d.month||d.name||''}</text>:null;
+      })}
+    </svg>
+  );
+}
+
+function Donut({data, h=180}){
+  const total=data.reduce((s,d)=>s+(d.value||0),0)||1;
+  let ang=-Math.PI/2; const cx=90, cy=h*.9, R=72, ri=46;
+  const slices=data.map(d=>{
+    const a=(d.value/total)*Math.PI*2;
+    const x1=cx+R*Math.cos(ang),y1=cy+R*Math.sin(ang);
+    ang+=a;
+    const x2=cx+R*Math.cos(ang),y2=cy+R*Math.sin(ang);
+    const ix1=cx+ri*Math.cos(ang-a),iy1=cy+ri*Math.sin(ang-a);
+    const ix2=cx+ri*Math.cos(ang),iy2=cy+ri*Math.sin(ang);
+    const lg=a>Math.PI?1:0;
+    return {path:`M${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R},0,${lg},1,${x2.toFixed(2)},${y2.toFixed(2)} L${ix2.toFixed(2)},${iy2.toFixed(2)} A${ri},${ri},0,${lg},0,${ix1.toFixed(2)},${iy1.toFixed(2)} Z`,color:d.color||CC[0],name:d.name,value:d.value};
+  });
+  return (
+    <svg viewBox={`0 0 320 ${h*1.8}`} style={{width:'100%',height:h}}>
+      {slices.map((sl,i)=><path key={i} d={sl.path} fill={sl.color} opacity=".9"/>)}
+      {data.map((d,i)=>(
+        <g key={i} transform={`translate(182,${14+i*20})`}>
+          <rect width="9" height="9" rx="2" fill={d.color||CC[i]} y="-1"/>
+          <text x="13" y="8" fontSize="11" fill={P.tx}>{d.name} — {d.value}%</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function HBar({data, h=170}){
+  const W=390, H=h*2; const n=data.length; const rowH=H/n;
+  const mx=Math.max(...data.map(d=>d.val||0))||1;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:h}}>
+      {data.map((d,i)=>{
+        const bw=(d.val/mx)*240; const y=i*rowH+rowH*.15;
+        return (
+          <g key={i}>
+            <text x="0" y={y+rowH*.65} fontSize="12" fill={P.tx}>{d.name}</text>
+            <rect x="90" y={y+rowH*.1} width={bw} height={rowH*.65} fill={CC[i%CC.length]} rx="3"/>
+            <text x={95+bw} y={y+rowH*.65} fontSize="11" fill={P.tx} opacity=".6">{d.val}K€</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function RadarChart({data, dk='A', color=P.s, h=155}){
+  const n=data.length, cx=80, cy=h*.9, R=62;
+  const pts=data.map((d,i)=>{
+    const ang=-Math.PI/2+i*(Math.PI*2/n), val=(d[dk]||0)/100;
+    return {x:cx+R*val*Math.cos(ang),y:cy+R*val*Math.sin(ang),lx:cx+(R+20)*Math.cos(ang),ly:cy+(R+20)*Math.sin(ang),label:d.subject};
+  });
+  const poly=pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const grids=[.25,.5,.75,1].map(f=>data.map((_,i)=>{
+    const ang=-Math.PI/2+i*(Math.PI*2/n);
+    return `${(cx+R*f*Math.cos(ang)).toFixed(1)},${(cy+R*f*Math.sin(ang)).toFixed(1)}`;
+  }).join(' '));
+  return (
+    <svg viewBox={`0 0 280 ${h*1.8}`} style={{width:'100%',height:h}}>
+      {grids.map((g,i)=><polygon key={i} points={g} fill="none" stroke="rgba(122,139,111,0.13)" strokeWidth="1"/>)}
+      {pts.map((p,i)=><line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(122,139,111,0.09)" strokeWidth="1"/>)}
+      <polygon points={poly} fill={color} fillOpacity=".14" stroke={color} strokeWidth="1.5"/>
+      {pts.map((p,i)=><text key={i} x={p.lx} y={p.ly+4} textAnchor="middle" fontSize="10" fill={P.tx} opacity=".7">{p.label}</text>)}
+    </svg>
+  );
+}
+
+// ── Icons ────────────────────────────────────────────────────
+const Leaf = ({size=24,color=P.s}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+  </svg>
+);
+
+const Botanic = () => (
+  <svg style={{position:'absolute',right:0,top:0,opacity:.055,pointerEvents:'none'}} width="260" height="260" viewBox="0 0 260 260" fill="none">
+    <path d="M180 5 C180 5 145 75 162 148 C179 221 235 248 255 258" stroke="#3D4A3D" strokeWidth="2"/>
+    <path d="M180 5 C180 5 210 62 192 122" stroke="#3D4A3D" strokeWidth="1.5"/>
+    <ellipse cx="208" cy="83" rx="28" ry="13" transform="rotate(-20 208 83)" fill="#7A8B6F" opacity=".38"/>
+    <ellipse cx="171" cy="132" rx="32" ry="12" transform="rotate(14 171 132)" fill="#7A8B6F" opacity=".28"/>
+    <ellipse cx="195" cy="184" rx="25" ry="11" transform="rotate(-9 195 184)" fill="#7A8B6F" opacity=".33"/>
+  </svg>
+);
+
+// ── Mock data ────────────────────────────────────────────────
+const MONTHS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+const SPEND = MONTHS.map((m,i)=>({month:m,dep:[420,380,510,470,540,490,380,310,520,560,490,430][i],sav:[18,22,31,28,35,29,24,19,38,42,33,27][i]}));
+const CATS = [{name:'IT & Logiciels',value:28,color:'#7A8B6F'},{name:'Facilities',value:22,color:'#3D4A3D'},{name:'Prestataires',value:18,color:'#C9A961'},{name:'Matières',value:16,color:'#A8B89B'},{name:'Transport',value:10,color:'#B85C3E'},{name:'Autres',value:6,color:'#8B7A6F'}];
+const SUPPLIERS = [
+  {id:1,name:'Lafarge Holcim',sec:'Matériaux',score:82,certs:['ISO 9001','ISO 14001'],ca:'2.3 Mds€',loc:'Lyon',risk:'faible'},
+  {id:2,name:'Veolia Propreté',sec:'Services',score:75,certs:['ISO 14001'],ca:'890 M€',loc:'Paris',risk:'modéré'},
+  {id:3,name:'Schneider Electric',sec:'Énergie',score:91,certs:['ISO 9001','ISO 50001'],ca:'3.1 Mds€',loc:'Grenoble',risk:'faible'},
+  {id:4,name:'Decathlon Pro',sec:'EPI',score:88,certs:['ISO 9001'],ca:'1.4 Mds€',loc:'Villeneuve d\'Ascq',risk:'faible'},
+  {id:5,name:'Air Liquide',sec:'Gaz industriels',score:67,certs:['ISO 9001'],ca:'560 M€',loc:'Paris',risk:'élevé'},
+  {id:6,name:'Michelin Solutions',sec:'Flotte / Pneumatiques',score:79,certs:['Ecovadis Gold'],ca:'820 M€',loc:'Clermont-Ferrand',risk:'modéré'},
+];
+const RADAR_D = [{subject:'Qualité',A:88},{subject:'Prix',A:76},{subject:'Délais',A:92},{subject:'RSE',A:65},{subject:'Innovation',A:71},{subject:'Service',A:84}];
+const PROMPTS = [
+  {id:1,name:'Analyse contrat — Clauses risquées',cat:'Contrats',badge:'Système',ver:'V4.1',uses:247,author:'Admin',upd:'12 avr. 2026',desc:'Détection des clauses déséquilibrées, risques juridiques et points de renégociation.',content:`Tu es un juriste expert en droit des contrats commerciaux français. Analyse le contrat suivant et produis un rapport structuré.
+
+DOCUMENT : {contenu_contrat}
+TYPE : {type_contrat} | PARTIE : {partie}
+
+INSTRUCTIONS :
+1. Note chaque clause : 🟢 Favorable / 🟡 À surveiller / 🔴 Risquée
+2. Pour chaque clause risquée : problème, risque financier estimé, reformulation suggérée
+3. Vérifie les clauses obligatoires : responsabilité, pénalités, résiliation, confidentialité, force majeure
+4. Identifie toutes les dates clés : échéance, renouvellement tacite, préavis
+5. Score de risque global /100 : juridique + financier + opérationnel
+6. Résumé exécutif en 5 lignes pour la direction
+
+FORMAT : rapport structuré en français, niveau expert mais lisible par non-juriste.`},
+  {id:2,name:'Email — Relance commerciale ferme',cat:'Emails',badge:'Équipe',ver:'V2.0',uses:183,author:'M. Dupont',upd:'8 avr. 2026',desc:'Email de relance ferme mais professionnel pour obtenir une réponse urgente.',content:`Tu es acheteur senior. Rédige un email de relance commerciale.
+
+CONTEXTE :
+- Fournisseur : {nom_fournisseur}
+- Objet : {objet_relance}
+- Relances précédentes : {nb_relances}
+- Enjeu : {montant} € | Délai : {date_limite}
+- Référence : {ref_document}
+
+TON : {ton} | LANGUE : {langue}
+
+INSTRUCTIONS :
+1. Objet : accrocheur, explicite, max 8 mots
+2. Corps : contexte → demande explicite → conséquence si non-réponse
+3. Formules assertives, jamais passives
+4. Version alternative en anglais si bilingue`},
+  {id:3,name:'TCO — Coûts cachés véhicules',cat:'TCO',badge:'Système',ver:'V1.5',uses:98,author:'Admin',upd:'2 mars 2026',desc:'Calcul et décomposition du TCO flotte automobile avec tous les coûts cachés.',content:`Tu es expert TCO flotte automobile. Analyse :
+
+VÉHICULE : {modele} | Prix : {prix} € | Durée : {duree} ans / {km} km
+Carburant : {carburant} | Usage : {usage}
+
+CALCULE et DÉCOMPOSE :
+1. Coûts visibles : achat, financement, assurance
+2. Coûts d'usage : carburant/énergie, entretien, pneumatiques
+3. Coûts cachés : temps conducteur, immobilisation, gestion admin
+4. Valeur résiduelle et impact TCO final
+5. Benchmark marché segment {segment}
+6. Recommandation : acheter / LOA / LLD / fleet management
+
+Présente en €/km ET en €/an + visualisation iceberg textuelle.`},
+  {id:4,name:'Sourcing — Qualification ISO 9001',cat:'Sourcing',badge:'Équipe',ver:'V3.0',uses:145,author:'L. Martin',upd:'15 avr. 2026',desc:'Questionnaire de qualification fournisseur selon critères ISO 9001 et achat.',content:`Tu es acheteur qualité. Qualifie ce fournisseur :
+
+FOURNISSEUR : {nom} | Catégorie : {cat} | Volume : {volume} €/an | Criticité : {crit}
+
+GÉNÈRE un questionnaire structuré en 6 axes :
+1. Identité & Structure (SIRET, capital, sites, effectifs)
+2. Système Qualité (certifications, PPM, non-conformités)
+3. Capacité Financière (CA 3 ans, résultat, RC Pro)
+4. RSE & Conformité (Ecovadis, bilan carbone, RGPD)
+5. Capacité Technique (équipements, délais, capacité surge)
+6. Références (3 refs clients vérifiables)
+
+Score /100 — Seuil minimum : 70/100
+Rédige aussi l'email de demande de qualification.`},
+  {id:5,name:'Should-cost — Pièce mécanique',cat:'TCO',badge:'Système',ver:'V2.2',uses:62,author:'Admin',upd:'20 fév. 2026',desc:'Modélisation should-cost pour pièce mécanique usinée.',content:`Tu es ingénieur achat expert en should-cost.
+
+PIÈCE : {designation} | Matière : {matiere} | Masse brute/nette : {brute}/{nette} kg
+Opérations : {operations} | Tolérance : {tolerance}
+Volume : {volume} pièces/an | Pays fab : {pays}
+
+DÉCOMPOSE :
+1. Matière : LME + taux de perte copeau
+2. Main d'œuvre directe : temps gamme × taux horaire
+3. Frais variables : énergie, fluides, outillage
+4. Frais fixes : amortissement, loyer atelier
+5. Marge fournisseur : benchmark {secteur} (5-15%)
+6. Logistique : emballage + transport Incoterm {incoterm}
+
+Prix should-cost : fourchette basse / médiane / haute
+ALERTE si prix fournisseur ({prix_f} €) dépasse should-cost de > 15%.`},
+  {id:6,name:'Risque — Santé financière fournisseur',cat:'Risques',badge:'Système',ver:'V1.8',uses:119,author:'Admin',upd:'5 avr. 2026',desc:'Analyse de la solidité financière pour anticiper les défaillances.',content:`Tu es analyste financier risque fournisseur.
+
+FOURNISSEUR : {nom} (SIREN : {siren})
+DONNÉES FINANCIÈRES : {donnees}
+
+ANALYSE Altman Z-Score adapté PME françaises :
+1. Solvabilité : capitaux propres/bilan, endettement
+2. Liquidité : BFR, trésorerie nette, ratio immédiat
+3. Rentabilité : EBE, marge nette, ROCE
+4. Activité : évolution CA 3 ans, concentration client
+5. Alertes légales : procédure collective, privilèges URSSAF
+
+SCORING :
+- > 75 : Faible risque — surveillance annuelle
+- 50-75 : Modéré — audit + performance bond
+- 25-50 : Élevé — dual sourcing + garantie bancaire
+- < 25 : Critique — plan de continuité immédiat
+
+RECOMMANDATION : plan de mitigation avec actions et délais.`},
+  {id:7,name:'ESG — Conformité CSRD',cat:'Sourcing',badge:'Équipe',ver:'V1.0',uses:44,author:'C. Leblanc',upd:'18 avr. 2026',desc:'Évaluation conformité CSRD/CS3D et plan de progrès fournisseur.',content:`Tu es expert RSE/ESG CSRD et CS3D.
+
+FOURNISSEUR : {nom} | Secteur : {secteur} | CA : {ca} M€
+
+ÉVALUE sur 4 piliers (/25 chacun) :
+
+E — Environnement :
+- Bilan carbone Scope 1/2/3 disponible ?
+- Conformité Taxonomie UE
+- Plan de transition aligné Accord de Paris ?
+
+S — Social :
+- Politique RH : égalité, diversité, formation
+- Due diligence CS3D chaîne de valeur
+- Conformité Loi Sapin II + Devoir de Vigilance
+
+G — Gouvernance :
+- Comité RSE au CA ? Rapport DPEF/CSRD ?
+- Politique anti-fraude, whistleblowing
+
+A — Achats responsables :
+- Clause RSE dans contrats fournisseurs rang 2 ?
+- Participation Pacte Mondial, Ecovadis…
+
+SCORE /100 | NIVEAU : Bronze/Silver/Gold/Leader
+PLAN de PROGRÈS : 3 actions prioritaires + KPIs.`},
+  {id:8,name:'Reporting — Synthèse exécutive mensuelle',cat:'Reporting',badge:'Perso',ver:'V2.5',uses:31,author:'Moi',upd:'30 avr. 2026',desc:'Synthèse mensuelle performance Achats pour le CODIR.',content:`Tu es directeur des achats. Prépare la synthèse mensuelle CODIR.
+
+DONNÉES {mois} {annee} :
+Dépenses : {dep} € | Savings : {sav} € ({pct}%)
+AO lancés : {ao} | Contrats signés : {nc} | Incidents : {inc}
+Comparatif N-1 : {comp}
+
+RÉDIGE en 4 parties :
+1. FAITS MARQUANTS (3 max, langage CODIR, impact business)
+2. PERFORMANCE vs OBJECTIFS (tableau : indicateur/cible/réalisé/écart/statut 🟢🟡🔴)
+3. POINTS D'ATTENTION (risques, décisions à prendre en direction)
+4. PRIORITÉS DU MOIS PROCHAIN (3 actions + responsable + date)
+
+Style : assertif, chiffré, orienté décision, 400-600 mots, slides-ready.`},
+];
+
+// ── IA Demo msgs ─────────────────────────────────────────────
+const IA_DEMO = [
+  {role:'ai',text:'Bonjour ! Je suis votre assistant AchatPro. Je vois que vous consultez le tableau de bord — souhaitez-vous que je prépare le rapport mensuel pour le CODIR ?'},
+  {role:'user',text:'Oui, identifie aussi les actions prioritaires cette semaine.'},
+  {role:'ai',text:'Voici les 3 priorités : ① Contrat Veolia — renouvellement tacite dans 23 jours, lancer le processus maintenant. ② Relancer 3 appels d\'offres sans réponse (Lafarge, Air Liquide, Michelin). ③ Saisir l\'opportunité de regroupement commandes IT estimée à 34 K€ de savings.'},
+];
+
+// ── Modules ──────────────────────────────────────────────────
+
+function Dashboard(){
+  return (
+    <div className="fi" style={{padding:'24px 28px',maxWidth:1180,position:'relative'}}>
+      <Botanic/>
+      <h1 style={{fontFamily:'Georgia,serif',fontSize:26,fontWeight:700,color:P.sd,marginBottom:3}}>Bonjour Mélanie, voici votre journée Achats 🌿</h1>
+      <p style={{color:'var(--txm)',fontSize:13,marginBottom:20}}>Jeudi 1ᵉʳ mai 2026 · 4 alertes en attente</p>
+      <div className="g4" style={{marginBottom:16}}>
+        {[{l:'Économies YTD',v:'346 K€',d:'+12.4% vs N-1',up:true,i:'💚'},{l:'Contrats actifs',v:'47',d:'3 expirent < 30 j',up:false,i:'📑'},{l:'Fournisseurs à risque',v:'8',d:'+2 ce mois',up:false,i:'⚠️'},{l:'Tâches en attente',v:'12',d:'4 urgentes',up:false,i:'📋'}].map(k=>(
+          <div key={k.l} className="kpi">
+            <div style={{fontSize:18,marginBottom:4}}>{k.i}</div>
+            <div className="kpi-v">{k.v}</div>
+            <div className="kpi-l">{k.l}</div>
+            <div className={`kpi-d ${k.up?'up':'dn'}`}>{k.d}</div>
+          </div>
+        ))}
+      </div>
+      <div className="g2" style={{marginBottom:14}}>
+        <div className="card cp">
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            <span style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd}}>Dépenses & Économies 2026</span>
+            <div style={{display:'flex',gap:10,fontSize:11,color:'var(--txm)'}}>
+              <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:3,background:P.s,borderRadius:2,display:'inline-block'}}/> Dépenses</span>
+              <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:3,background:P.gold,borderRadius:2,display:'inline-block'}}/> Économies</span>
+            </div>
+          </div>
+          <AreaChart data={SPEND} k1="dep" k2="sav" h={150}/>
+        </div>
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>🔔 Alertes IA</div>
+          {[
+            {c:P.terra,bg:'rgba(184,92,62,0.06)',i:'📅',t:'Contrat Veolia — renouvellement tacite dans 23 jours',a:'Lancer le renouvellement'},
+            {c:P.gold,bg:'rgba(201,169,97,0.06)',i:'⚡',t:'3 AO sans réponse depuis > 14 jours',a:'Relancer les fournisseurs'},
+            {c:P.s,bg:'rgba(122,139,111,0.06)',i:'💰',t:'Opportunité savings : regroupement commandes IT',a:'Voir l\'analyse'},
+            {c:P.s,bg:'rgba(122,139,111,0.06)',i:'🌱',t:'Air Liquide : score ESG en baisse (62→55)',a:'Voir fiche fournisseur'},
+          ].map((a,i)=>(
+            <div key={i} className="aitem" style={{background:a.bg,borderColor:a.c+'33'}}>
+              <span style={{fontSize:16}}>{a.i}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:12,fontWeight:600,color:'var(--txs)',marginBottom:3}}>{a.t}</div>
+                <button className="btn btn-g" style={{fontSize:10,padding:'2px 8px'}}>{a.a} →</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="g2" style={{marginBottom:14}}>
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>✨ Recommandations IA</div>
+          {[{i:'💡',t:'Savings potentiels identifiés',d:'Regroupement IT Q2 estimé à 34 K€ supplémentaires.',c:P.s},{i:'🔍',t:'Benchmarker Schneider Electric',d:'Contrat actuel 8% au-dessus du marché.',c:P.gold},{i:'🤝',t:'Négociation Decathlon Pro',d:'Renouvellement dans 45 j, levier fort sur le volume Q3-Q4.',c:P.sd}].map((r,i)=>(
+            <div key={i} style={{display:'flex',gap:11,padding:'9px 11px',borderRadius:9,background:'var(--bg)',border:'1px solid var(--bdr)',cursor:'pointer',marginBottom:7,transition:'all .14s'}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor=P.sl}} onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--bdr)'}}>
+              <span style={{fontSize:18,flexShrink:0}}>{r.i}</span>
+              <div><div style={{fontSize:12,fontWeight:700,color:r.c,marginBottom:2}}>{r.t}</div><div style={{fontSize:11,color:'var(--txm)',lineHeight:1.5}}>{r.d}</div></div>
+            </div>
+          ))}
+        </div>
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>Répartition des dépenses</div>
+          <Donut data={CATS} h={175}/>
+        </div>
+      </div>
+      <div className="card cp">
+        <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>⚡ Actions rapides</div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          {['Nouveau RFQ','Analyser un contrat','Calculer un TCO','Qualifier un fournisseur','Générer un email','Préparer une QBR'].map(a=><button key={a} className="btn btn-s" style={{fontSize:12}}>{a}</button>)}
+        </div>
+      </div>
+      <div style={{marginTop:28,paddingTop:16,borderTop:'1px solid var(--bdr)',textAlign:'center'}}>
+        <p style={{fontFamily:'Georgia,serif',fontSize:12,color:'var(--txm)',fontStyle:'italic'}}>"L'achat n'est plus une fonction support. C'est un levier stratégique." — AchatPro</p>
+      </div>
+    </div>
+  );
+}
+
+function ProcessusAZ(){
+  const [step,setStep]=useState(2);
+  const STEPS=['Besoin','Sourcing','RFQ','Négociation','Contrat','Commande','Réception','Facture','Évaluation'];
+  const DETAIL=[
+    {i:'💬',d:'Identification et formalisation du besoin. Rédaction du cahier des charges.',c:['CDC validé par le demandeur','Budget alloué confirmé','Cahier des charges technique finalisé','Validation CODIR si > 50 K€']},
+    {i:'🔍',d:'Identification des fournisseurs. Market survey et pré-qualification.',c:['Longlist fournisseurs (min. 5)','Pré-qualification effectuée','Visite ou audit si criticité élevée','RFI envoyée et retours analysés']},
+    {i:'📋',d:'Rédaction et envoi de l\'appel d\'offres. Collecte et analyse des offres.',c:['Cahier des charges partagé','Date de réponse définie','Grille d\'analyse préparée','Minimum 3 offres reçues']},
+    {i:'🤝',d:'Préparation et conduite de la négociation.',c:['Stratégie de négociation définie','Objectifs prix/délais définis','BATNA identifié','PV de négociation rédigé']},
+    {i:'✍️',d:'Rédaction, révision juridique et signature.',c:['Contrat relu par le juridique','Clauses pénalités vérifiées','Signatures obtenues','Enregistrement dans la GED']},
+    {i:'🛒',d:'Émission du bon de commande et confirmation fournisseur.',c:['BC émis avec bonne imputation','Accusé de réception fournisseur','Délai de livraison confirmé','ERP mis à jour']},
+    {i:'📦',d:'Réception physique et contrôle qualité.',c:['BL signé et archivé','Contrôle qualité conforme','Non-conformités documentées','Magasin notifié']},
+    {i:'🧾',d:'Vérification de la facture et mise en paiement.',c:['Facture conforme au BC','3 voies vérifiées','Délai de paiement respecté','Facture transmise à la compta']},
+    {i:'⭐',d:'Évaluation de la prestation et mise à jour du score fournisseur.',c:['Grille d\'évaluation complétée','Score mis à jour','Retours partagés au fournisseur','QBR planifiée si partenaire clé']},
+  ];
+  const dossiers=[
+    {n:'EPI Sécurité — Decathlon Pro',s:2,p:28,m:'78 K€',u:false},
+    {n:'Maintenance CVC — Dalkia',s:4,p:55,m:'145 K€',u:true},
+    {n:'Fleet Management — ALD',s:5,p:68,m:'320 K€',u:false},
+    {n:'IT Infrastructure — Dell',s:7,p:85,m:'92 K€',u:false},
+    {n:'Prestations RH — Manpower',s:1,p:12,m:'56 K€',u:false},
+  ];
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
+        <div><h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd}}>Processus Achats A→Z</h2><p style={{color:'var(--txm)',fontSize:13}}>Guidez chaque dossier étape par étape</p></div>
+        <button className="btn btn-p">+ Nouveau dossier</button>
+      </div>
+      <div className="card cp" style={{marginBottom:16}}>
+        <div className="steprow">
+          {STEPS.map((s,i)=>(
+            <React.Fragment key={i}>
+              <div style={{display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',flexShrink:0}} onClick={()=>setStep(i)}>
+                <div className={`snum ${i<step?'done':i===step?'active':'idle'}`}>{i<step?'✓':i+1}</div>
+                <span className={`slbl ${i<=step?'on':''}`}>{s}</span>
+              </div>
+              {i<STEPS.length-1&&<div className={`sconn ${i<step?'done':''}`}/>}
+            </React.Fragment>
+          ))}
+        </div>
+        {DETAIL[step]&&(
+          <div style={{marginTop:16,padding:'14px 16px',background:'var(--bg)',borderRadius:9,border:'1px solid var(--bdr)',animation:'fi .2s ease'}}>
+            <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:9}}>
+              <span style={{fontSize:20}}>{DETAIL[step].i}</span>
+              <div><div style={{fontWeight:700,fontSize:13,color:P.sd}}>{STEPS[step]}</div><div style={{fontSize:11,color:'var(--txm)'}}>{DETAIL[step].d}</div></div>
+            </div>
+            <div className="g2" style={{gap:6}}>
+              {DETAIL[step].c.map((c,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:6,fontSize:12}}><span style={{color:P.s,fontSize:13,fontWeight:700}}>✓</span>{c}</div>)}
+            </div>
+            <div style={{marginTop:10,padding:'7px 11px',background:'rgba(201,169,97,0.07)',borderRadius:7,border:'1px solid rgba(201,169,97,0.18)',fontSize:11,color:P.sd}}>
+              💡 IA recommande de vérifier les pénalités contractuelles et le délai de préavis avant validation.
+            </div>
+          </div>
+        )}
+      </div>
+      <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>Dossiers en cours</div>
+      {dossiers.map((d,i)=>(
+        <div key={i} className="card card-hover csm" style={{marginBottom:7,display:'flex',alignItems:'center',gap:14}}>
+          {d.u&&<span className="badge b-terra">URGENT</span>}
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:600,color:'var(--txs)',marginBottom:4}}>{d.n}</div>
+            <div className="ptrack"><div className="pfill" style={{width:d.p+'%'}}/></div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontSize:13,fontWeight:700,color:P.s}}>{d.m}</div>
+            <div style={{fontSize:10,color:'var(--txm)'}}>Étape {d.s+1}/9 · {d.p}%</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmailModule(){
+  const [sc,setSc]=useState(0);const [ton,setTon]=useState('Ferme');const [lang,setLang]=useState('Français');
+  const [gen,setGen]=useState('');const [load,setLoad]=useState(false);
+  const SCS=[{i:'📋',n:'Relance RFQ',d:'Relancer sans réponse à un AO'},{i:'💰',n:'Négociation prix',d:'Demander une réduction tarifée'},{i:'🚫',n:'Refus poli',d:'Décliner une offre non retenue'},{i:'⚖️',n:'Mise en demeure',d:'Notifier un manquement contractuel'},{i:'✅',n:'Demande d\'avoir',d:'Contester une facture'},{i:'🙏',n:'Remerciements',d:'Confirmer un partenariat'}];
+  const generate=async()=>{
+    setLoad(true);
+    try{const t=await window.claude.complete({messages:[{role:'user',content:`Rédige un email professionnel achat. Scénario: ${SCS[sc].n}. Ton: ${ton}. Langue: ${lang}. Email concis avec objet inclus.`}]});setGen(t);}
+    catch(e){setGen('Erreur: '+e.message);}
+    setLoad(false);
+  };
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd,marginBottom:3}}>Assistant Emails IA</h2>
+      <p style={{color:'var(--txm)',fontSize:13,marginBottom:18}}>Générez des emails achat professionnels en quelques secondes</p>
+      <div className="g2">
+        <div>
+          <div style={{fontWeight:600,fontSize:13,color:P.sd,marginBottom:8}}>Scénarios</div>
+          <div style={{display:'flex',flexDirection:'column',gap:5,marginBottom:14}}>
+            {SCS.map((s,i)=>(
+              <button key={i} onClick={()=>setSc(i)} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 11px',borderRadius:9,border:`1.5px solid ${sc===i?P.s:'var(--bdr)'}`,background:sc===i?'rgba(122,139,111,0.06)':'var(--card)',cursor:'pointer',textAlign:'left',transition:'all .13s'}}>
+                <span style={{fontSize:15}}>{s.i}</span>
+                <div><div style={{fontSize:12,fontWeight:600,color:'var(--txs)'}}>{s.n}</div><div style={{fontSize:10,color:'var(--txm)'}}>{s.d}</div></div>
+              </button>
+            ))}
+          </div>
+          <div style={{marginBottom:11}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:'.8px',textTransform:'uppercase',color:'var(--txm)',marginBottom:6}}>Ton</div>
+            <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+              {['Ferme','Diplomatique','Urgent','Cordial','Juridique'].map(t=><button key={t} className={`chip ${ton===t?'on':''}`} onClick={()=>setTon(t)}>{t}</button>)}
+            </div>
+          </div>
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:10,fontWeight:700,letterSpacing:'.8px',textTransform:'uppercase',color:'var(--txm)',marginBottom:6}}>Langue</div>
+            <div style={{display:'flex',gap:5}}>
+              {['Français','English','Deutsch','Español'].map(l=><button key={l} className={`chip ${lang===l?'on':''}`} onClick={()=>setLang(l)}>{l}</button>)}
+            </div>
+          </div>
+          <button className="btn btn-p" onClick={generate} disabled={load}>{load?'Génération…':'Générer l\'email ✨'}</button>
+        </div>
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>Email généré</div>
+          {gen?(
+            <div>
+              <div style={{whiteSpace:'pre-wrap',fontSize:12,lineHeight:1.8,background:'var(--bg)',padding:'12px',borderRadius:8,border:'1px solid var(--bdr)',marginBottom:10,minHeight:200,color:'var(--tx)'}}>{gen}</div>
+              <div style={{display:'flex',gap:7}}>
+                <button className="btn btn-p" style={{fontSize:12}} onClick={()=>navigator.clipboard?.writeText(gen)}>📋 Copier</button>
+                <button className="btn btn-s" style={{fontSize:12}} onClick={generate}>↺ Régénérer</button>
+              </div>
+            </div>
+          ):(
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:220,color:'var(--txm)',gap:8}}>
+              <span style={{fontSize:34,opacity:.35}}>✉️</span>
+              <div style={{fontSize:12}}>Choisissez un scénario et générez</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Sourcing(){
+  const [view,setView]=useState('list');
+  const rc={faible:P.s,modéré:P.gold,élevé:P.terra};
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
+        <div><h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd}}>Sourcing Fournisseurs</h2><p style={{color:'var(--txm)',fontSize:13}}>Identifiez, qualifiez et gérez votre panel</p></div>
+        <div style={{display:'flex',gap:6}}>
+          <button className={`btn btn-g ${view==='list'?'on':''}`} onClick={()=>setView('list')}>Liste</button>
+          <button className={`btn btn-g ${view==='kanban'?'on':''}`} onClick={()=>setView('kanban')}>Pipeline</button>
+        </div>
+      </div>
+      <div className="card csm" style={{marginBottom:14,display:'flex',alignItems:'center',gap:9}}>
+        <span style={{fontSize:15}}>🔍</span>
+        <input className="inp" placeholder="Rechercher par secteur, certifications, localisation…" style={{border:'none',background:'none',boxShadow:'none',flex:1}}/>
+        {['ISO 9001','France','CA>10M€','Ecovadis'].map(f=><button key={f} className="chip" style={{fontSize:10}}>{f}</button>)}
+      </div>
+      {view==='list'&&SUPPLIERS.map(s=>(
+        <div key={s.id} className="card card-hover csm" style={{marginBottom:8,display:'flex',alignItems:'center',gap:14}}>
+          <div style={{width:38,height:38,borderRadius:9,background:'rgba(122,139,111,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:P.s,flexShrink:0}}>{s.name[0]}</div>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:700,fontSize:13,color:'var(--txs)',marginBottom:3}}>{s.name}</div>
+            <div style={{display:'flex',gap:7,alignItems:'center',flexWrap:'wrap'}}>
+              <span style={{fontSize:11,color:'var(--txm)'}}>{s.sec}</span><span style={{color:'var(--bdr)'}}>·</span>
+              <span style={{fontSize:11,color:'var(--txm)'}}>📍 {s.loc}</span><span style={{color:'var(--bdr)'}}>·</span>
+              <span style={{fontSize:11,color:'var(--txm)'}}>{s.ca}</span>
+              {s.certs.map(c=><span key={c} className="badge b-sage" style={{fontSize:9}}>{c}</span>)}
+            </div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontFamily:'Georgia,serif',fontSize:20,fontWeight:700,color:P.s}}>{s.score}</div>
+            <div style={{fontSize:10,color:'var(--txm)'}}>Score IA /100</div>
+            <span className="badge" style={{background:rc[s.risk]+'18',color:rc[s.risk],border:`1px solid ${rc[s.risk]}33`,fontSize:9}}>Risque {s.risk}</span>
+          </div>
+        </div>
+      ))}
+      {view==='kanban'&&(
+        <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10}}>
+          {['Identifié','Contacté','Qualifié','Référencé','Écarté'].map((col,ci)=>(
+            <div key={col} className="kcol">
+              <div className="khdr">{col} <span style={{background:'var(--card)',border:'1px solid var(--bdr)',borderRadius:20,padding:'1px 5px',fontSize:10}}>{[3,4,2,6,1][ci]}</span></div>
+              {SUPPLIERS.slice(0,ci===0?2:ci===3?3:1).map(s=>(
+                <div key={s.id} className="kcard">
+                  <div style={{fontWeight:600,fontSize:11,marginBottom:2,color:'var(--txs)'}}>{s.name}</div>
+                  <div style={{fontSize:10,color:'var(--txm)'}}>{s.sec}</div>
+                  <div style={{marginTop:4,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <span className="badge b-sage" style={{fontSize:9}}>Score: {s.score}</span>
+                    <span style={{fontSize:9,color:'var(--txm)'}}>{s.loc}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Dashboards(){
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
+        <div><h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd}}>Dashboards & Reporting</h2><p style={{color:'var(--txm)',fontSize:13}}>Vue consolidée de la performance Achats</p></div>
+        <div style={{display:'flex',gap:6}}>{['PDF','PPT','Excel'].map(f=><button key={f} className="btn btn-g">⬇ {f}</button>)}</div>
+      </div>
+      <div className="g4" style={{marginBottom:14}}>
+        {[{l:'Dépenses totales',v:'5.2 M€',d:'+3.1%',up:false},{l:'Savings réalisés',v:'346 K€',d:'+12.4%',up:true},{l:'Taux service',v:'94.2%',d:'+1.8pt',up:true},{l:'Contrats actifs',v:'47',d:'-2 vs N-1',up:false}].map(k=>(
+          <div key={k.l} className="kpi"><div className="kpi-v">{k.v}</div><div className="kpi-l">{k.l}</div><div className={`kpi-d ${k.up?'up':'dn'}`}>{k.d}</div></div>
+        ))}
+      </div>
+      <div className="g2" style={{marginBottom:14}}>
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:12}}>Dépenses mensuelles (K€)</div>
+          <BarChart data={SPEND} dk="dep" h={155}/>
+        </div>
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>Répartition par catégorie</div>
+          <Donut data={CATS} h={175}/>
+        </div>
+      </div>
+      <div className="g2">
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>Top fournisseurs par volume</div>
+          <HBar data={SUPPLIERS.map(s=>({name:s.name.split(' ')[0],val:Math.round(s.score*8+100)}))} h={165}/>
+        </div>
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>Alertes intelligentes</div>
+          {[{c:'🔴',t:'Dérive prix Veolia +8% vs benchmark',d:'Il y a 2h'},{c:'🟡',t:'Contrat Schneider : renouvellement dans 45 j',d:'Hier'},{c:'🟢',t:'Savings Q1 : objectif dépassé de 12%',d:'28 avr.'}].map((a,i)=>(
+            <div key={i} style={{display:'flex',gap:9,padding:'8px 0',borderBottom:'1px solid var(--bdr)',alignItems:'flex-start'}}>
+              <span style={{fontSize:13}}>{a.c}</span>
+              <div><div style={{fontSize:12,color:'var(--txs)',fontWeight:500}}>{a.t}</div><div style={{fontSize:10,color:'var(--txm)',marginTop:1}}>{a.d}</div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TcoModule(){
+  const [v,setV]=useState({a:'',inst:'',maint:'',en:'',form:'',dur:'5',fin:''});
+  const [res,setRes]=useState(null);
+  const set=(k,val)=>setV(p=>({...p,[k]:val}));
+  const calc=()=>{
+    const pa=+v.a||0,inst=+v.inst||0,maint=(+v.maint||0)*(+v.dur||5),en=(+v.en||0)*(+v.dur||5),form=+v.form||0,fin=+v.fin||0;
+    const h=inst+maint+en+form+fin,tot=pa+h;
+    setRes({pa,h,tot,an:Math.round(tot/(+v.dur||5)),pct:pa>0?Math.round(h/pa*100):0,items:[{l:'Prix d\'achat',val:pa},{l:'Installation',val:inst},{l:'Maintenance totale',val:maint},{l:'Énergie totale',val:en},{l:'Formation',val:form},{l:'Fin de vie',val:fin}]});
+  };
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd,marginBottom:3}}>Calculateur TCO</h2>
+      <p style={{color:'var(--txm)',fontSize:13,marginBottom:18}}>Total Cost of Ownership — Révélez tous les coûts cachés</p>
+      <div className="g2">
+        <div className="card cp">
+          <div className="g2" style={{marginBottom:12}}>
+            {[{k:'a',l:"Prix d'achat (€)"},{k:'inst',l:'Installation (€)'},{k:'maint',l:'Maintenance/an (€)'},{k:'en',l:'Énergie/an (€)'},{k:'form',l:'Formation (€)'},{k:'dur',l:'Durée (ans)'},{k:'fin',l:'Fin de vie (€)'}].map(f=>(
+              <div key={f.k}><label style={{fontSize:11,fontWeight:600,color:'var(--txm)',display:'block',marginBottom:3}}>{f.l}</label><input type="number" className="inp" value={v[f.k]} onChange={e=>set(f.k,e.target.value)} placeholder="0"/></div>
+            ))}
+          </div>
+          <button className="btn btn-p" onClick={calc}>Calculer le TCO</button>
+        </div>
+        <div className="card cp">
+          {res?(
+            <div>
+              <div style={{textAlign:'center',marginBottom:18}}>
+                <div style={{fontSize:11,color:'var(--txm)',marginBottom:3}}>TCO Total sur {v.dur} ans</div>
+                <div style={{fontFamily:'Georgia,serif',fontSize:34,fontWeight:700,color:P.s}}>{res.tot.toLocaleString('fr-FR')} €</div>
+                <div style={{fontSize:12,color:'var(--txm)'}}>{res.an.toLocaleString('fr-FR')} €/an</div>
+              </div>
+              <div style={{background:'var(--bg)',borderRadius:9,padding:'11px 13px',marginBottom:12,border:'1px solid var(--bdr)'}}>
+                {[{l:'Coûts visibles',val:res.pa,c:P.s},{l:'Coûts cachés 🧊',val:res.h,c:P.terra}].map(b=>(
+                  <div key={b.l} style={{marginBottom:10}}>
+                    <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}>
+                      <span style={{fontWeight:600}}>{b.l}</span><span style={{fontWeight:700,color:b.c}}>{b.val.toLocaleString('fr-FR')} €</span>
+                    </div>
+                    <div className="ptrack"><div className="pfill" style={{width:`${res.tot>0?b.val/res.tot*100:0}%`,background:b.c}}/></div>
+                  </div>
+                ))}
+              </div>
+              {res.items.filter(i=>i.val>0).map(i=>(
+                <div key={i.l} style={{display:'flex',justifyContent:'space-between',fontSize:12,padding:'3px 0',borderBottom:'1px solid var(--bdr)'}}>
+                  <span style={{color:'var(--txm)'}}>{i.l}</span><span style={{fontWeight:600}}>{i.val.toLocaleString('fr-FR')} €</span>
+                </div>
+              ))}
+            </div>
+          ):(
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--txm)',gap:8}}>
+              <span style={{fontSize:38,opacity:.3}}>💰</span><div style={{fontSize:12}}>Remplissez les champs et calculez</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const CONTRATS_DEMO=[
+  {id:'CF-2026-047',sup:'Veolia',cat:'Prestations',type:'Cadre',sign:'15 mai 2023',exp:'15 mai 2026',amt:435000,tac:true,preavis:'6 mois',risk:62,status:'actif'},
+  {id:'CF-2025-018',sup:'Schneider Electric',cat:'IT',type:'Cadre',sign:'1 mars 2024',exp:'1 mars 2027',amt:1800000,tac:false,preavis:'3 mois',risk:38,status:'actif'},
+  {id:'CF-2024-091',sup:'Lafarge Ciments',cat:'BTP',type:'Cadre',sign:'10 janv. 2024',exp:'10 juil. 2026',amt:920000,tac:true,preavis:'4 mois',risk:71,status:'actif'},
+  {id:'NDA-2026-003',sup:'Capgemini',cat:'Conseil',type:'NDA',sign:'2 fév. 2026',exp:'2 fév. 2029',amt:0,tac:false,preavis:'—',risk:22,status:'actif'},
+  {id:'SLA-2025-022',sup:'Computacenter',cat:'IT',type:'SLA',sign:'12 sept. 2025',exp:'12 sept. 2027',amt:280000,tac:true,preavis:'2 mois',risk:45,status:'actif'},
+  {id:'CF-2023-105',sup:'Engie',cat:'Énergie',type:'Cadre',sign:'1 juin 2023',exp:'1 juin 2026',amt:6800000,tac:false,preavis:'12 mois',risk:55,status:'expiration proche'},
+];
+
+function AnalyseContrats(){
+  const [view,setView]=useState('liste');
+  const [file,setFile]=useState(null);const [res,setRes]=useState(null);const [load,setLoad]=useState(false);const [drag,setDrag]=useState(false);
+  const [sel,setSel]=useState(null);
+  const fRef=useRef();
+  const expSoon=CONTRATS_DEMO.filter(c=>{const m=(new Date(c.exp.split(' ').reverse().join(' '))-new Date())/(1000*60*60*24*30);return m<6;});
+  const analyze=async(content,name)=>{
+    setFile({name,content});setLoad(true);setRes(null);
+    try{
+      const t=await window.claude.complete({messages:[{role:'user',content:`Tu es juriste expert. Analyse ce contrat et identifie clauses risquées (🔴), neutres (🟡), favorables (🟢). Score de risque /100. Résumé en 5 lignes. Contrat:\n${content.slice(0,2000)}`}]});
+      setRes({text:t,score:Math.floor(Math.random()*30+50),dates:[{l:'Échéance',d:'15 mai 2029',t:'ok'},{l:'Préavis résiliation',d:'15 nov. 2028',t:'warn'},{l:'Renouvellement tacite',d:'15 fév. 2029',t:'risk'}]});
+    }catch(e){setRes({text:'Erreur: '+e.message,score:0,dates:[]});}
+    setLoad(false);
+  };
+  const loadDemo=()=>analyze(`CONTRAT DE FOURNITURE N° CF-2026-047\nOBJET: Fourniture de services de nettoyage industriel pendant 3 ans.\nPRIX: 145 000 € HT/an. Révision annuelle selon indice INSEE.\nPÉNALITÉS: En cas de retard de paiement, 1.5x le taux légal.\nRÉSILIATION: Préavis de 6 mois requis de chaque partie.\nRESPONSABILITÉ: Limitée à 50% de la valeur annuelle du contrat.\nRENOUVELLEMENT TACITE: Par période de 2 ans sauf dénonciation 3 mois avant l'échéance.`,'Veolia_contrat_nettoyage.pdf');
+
+  if(view==='liste'&&!file&&!load) return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14}}>
+        <div>
+          <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd}}>Contrats & Analyse IA</h2>
+          <p style={{color:'var(--txm)',fontSize:13}}>Coffre-fort contractuel, suivi d'expiration et analyse IA des clauses</p>
+        </div>
+        <button className="btn btn-p" onClick={()=>setView('upload')}>+ Analyser un contrat</button>
+      </div>
+
+      <div className="g4" style={{marginBottom:14}}>
+        <div className="kpi"><div className="kpi-l">Contrats actifs</div><div className="kpi-v">{CONTRATS_DEMO.filter(c=>c.status==='actif').length}</div><div className="kpi-d">{CONTRATS_DEMO.length} au total</div></div>
+        <div className="kpi"><div className="kpi-l">⚠️ Expirent &lt; 6 mois</div><div className="kpi-v" style={{color:P.terra}}>{expSoon.length}</div><div className="kpi-d">À renouveler / résilier</div></div>
+        <div className="kpi"><div className="kpi-l">Engagement total</div><div className="kpi-v" style={{color:P.s}}>{(CONTRATS_DEMO.reduce((a,b)=>a+b.amt,0)/1000000).toFixed(1)} M€</div><div className="kpi-d">Sur durées contractuelles</div></div>
+        <div className="kpi"><div className="kpi-l">Score risque moyen</div><div className="kpi-v" style={{color:P.gold}}>{Math.round(CONTRATS_DEMO.reduce((a,b)=>a+b.risk,0)/CONTRATS_DEMO.length)}/100</div><div className="kpi-d">Modéré</div></div>
+      </div>
+
+      {expSoon.length>0&&(
+        <div className="card cp" style={{background:'rgba(184,92,62,0.05)',border:`1px solid ${P.terra}33`,marginBottom:14}}>
+          <div style={{fontWeight:700,color:P.terra,marginBottom:7,fontSize:13}}>🚨 Alertes échéances</div>
+          {expSoon.map(c=>(
+            <div key={c.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid var(--bdr)'}}>
+              <div style={{fontSize:12}}><strong>{c.sup}</strong> — {c.id} · expire le {c.exp} {c.tac&&<span className="badge b-gold" style={{marginLeft:6}}>Tacite reconduction</span>}</div>
+              <div style={{display:'flex',gap:6}}>
+                <button className="btn btn-s" style={{fontSize:11,padding:'4px 10px'}}>Lancer renouvellement</button>
+                <button className="btn btn-g" style={{fontSize:11,padding:'4px 10px'}} onClick={()=>setSel(c)}>Voir</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="card" style={{overflow:'hidden'}}>
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+          <thead><tr style={{background:'var(--bg)',borderBottom:'1px solid var(--bdr)'}}>
+            {['Réf.','Fournisseur','Catégorie','Type','Signature','Expiration','Montant','Risque','Actions'].map(h=>(
+              <th key={h} style={{textAlign:'left',padding:'9px 11px',fontSize:10,fontWeight:700,color:'var(--txm)',letterSpacing:'.5px',textTransform:'uppercase'}}>{h}</th>
+            ))}
+          </tr></thead>
+          <tbody>
+            {CONTRATS_DEMO.map(c=>{
+              const m=(new Date(c.exp.split(' ').reverse().join(' '))-new Date())/(1000*60*60*24*30);
+              const col=m<3?P.terra:m<6?P.gold:P.s;
+              return (
+                <tr key={c.id} style={{borderBottom:'1px solid var(--bdr)',cursor:'pointer'}} onClick={()=>setSel(c)}>
+                  <td style={{padding:'9px 11px',fontFamily:'monospace',fontSize:10.5,color:'var(--txm)'}}>{c.id}</td>
+                  <td style={{padding:'9px 11px',fontWeight:600}}>{c.sup}</td>
+                  <td style={{padding:'9px 11px',color:'var(--txm)'}}>{c.cat}</td>
+                  <td style={{padding:'9px 11px'}}><span className="badge b-sage">{c.type}</span></td>
+                  <td style={{padding:'9px 11px',fontSize:11,color:'var(--txm)'}}>{c.sign}</td>
+                  <td style={{padding:'9px 11px',fontSize:11,fontWeight:600,color:col}}>{c.exp}</td>
+                  <td style={{padding:'9px 11px',fontFamily:'Georgia,serif',fontWeight:700,color:P.sd}}>{c.amt?(c.amt/1000).toFixed(0)+'k €':'—'}</td>
+                  <td style={{padding:'9px 11px'}}><span style={{display:'inline-block',padding:'2px 8px',borderRadius:10,background:c.risk>60?'rgba(184,92,62,0.12)':c.risk>40?'rgba(201,169,97,0.12)':'rgba(122,139,111,0.12)',color:c.risk>60?P.terra:c.risk>40?P.gold:P.s,fontSize:11,fontWeight:700}}>{c.risk}/100</span></td>
+                  <td style={{padding:'9px 11px'}}><button className="btn btn-g" style={{fontSize:10,padding:'3px 8px'}} onClick={e=>{e.stopPropagation();loadDemo();}}>🔍 Analyser</button></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {sel&&(
+        <div onClick={()=>setSel(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:30}}>
+          <div onClick={e=>e.stopPropagation()} className="card cp" style={{maxWidth:520,width:'100%',maxHeight:'90vh',overflow:'auto'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
+              <div>
+                <div style={{fontFamily:'Georgia,serif',fontSize:18,fontWeight:700,color:P.sd}}>{sel.sup}</div>
+                <div style={{fontSize:11,color:'var(--txm)',fontFamily:'monospace'}}>{sel.id}</div>
+              </div>
+              <button onClick={()=>setSel(null)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'var(--txm)'}}>×</button>
+            </div>
+            <div className="g2" style={{gap:8,marginBottom:12}}>
+              {[['Catégorie',sel.cat],['Type',sel.type],['Signature',sel.sign],['Expiration',sel.exp],['Montant',sel.amt?(sel.amt/1000).toFixed(0)+'k €':'—'],['Préavis',sel.preavis],['Tacite reconduction',sel.tac?'Oui ⚠️':'Non'],['Score risque',sel.risk+'/100']].map(([k,v])=>(
+                <div key={k} style={{padding:'7px 10px',background:'var(--bg)',borderRadius:7,border:'1px solid var(--bdr)'}}>
+                  <div style={{fontSize:10,color:'var(--txm)',textTransform:'uppercase',letterSpacing:'.5px'}}>{k}</div>
+                  <div style={{fontSize:12.5,fontWeight:600,color:'var(--tx)',marginTop:2}}>{v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
+              <button className="btn btn-p" onClick={()=>{setSel(null);loadDemo();}}>🔍 Analyser par IA</button>
+              <button className="btn btn-s">📅 Programmer rappel</button>
+              <button className="btn btn-g">📄 Télécharger</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  if(view==='upload'&&!file&&!load) return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd,marginBottom:3}}>Analyse de Contrats</h2>
+      <p style={{color:'var(--txm)',fontSize:13,marginBottom:24}}>Détection automatique des risques et extraction des clauses clés</p>
+      <div style={{display:'flex',justifyContent:'center'}}>
+        <div className="card cp" style={{width:460,textAlign:'center',cursor:'pointer',border:`2px dashed ${drag?P.s:'var(--bdr)'}`,background:drag?'rgba(122,139,111,0.04)':'var(--card)',transition:'all .2s'}}
+          onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)}
+          onDrop={e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer?.files?.[0];if(f){const r=new FileReader();r.onload=ev=>analyze(ev.target.result||f.name,f.name);r.readAsText(f);}}}
+          onClick={()=>fRef.current?.click()}>
+          <div style={{fontSize:38,marginBottom:10,opacity:.45}}>📑</div>
+          <div style={{fontFamily:'Georgia,serif',fontSize:16,fontWeight:700,color:P.sd,marginBottom:5}}>Déposez votre contrat</div>
+          <div style={{fontSize:12,color:'var(--txm)',marginBottom:14}}>PDF · DOCX · TXT — analyse IA en quelques secondes</div>
+          <input ref={fRef} type="file" style={{display:'none'}} onChange={e=>{const f=e.target.files?.[0];if(f){const r=new FileReader();r.onload=ev=>analyze(ev.target.result||f.name,f.name);r.readAsText(f);}}}/>
+          <button className="btn btn-p" onClick={e=>{e.stopPropagation();loadDemo();}}>Analyser un contrat démo</button>
+          <button className="btn btn-g" style={{marginLeft:8}} onClick={e=>{e.stopPropagation();setView('liste');}}>← Retour à la liste</button>
+        </div>
+      </div>
+    </div>
+  );
+  return (
+    <div className="fi" style={{display:'flex',flexDirection:'column',height:'100%'}}>
+      <div style={{padding:'16px 28px',borderBottom:'1px solid var(--bdr)',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
+        <div><h2 style={{fontFamily:'Georgia,serif',fontSize:17,fontWeight:700,color:P.sd}}>📑 {file?.name}</h2>{res&&<div style={{fontSize:12,color:'var(--txm)'}}>Score de risque : <strong style={{color:res.score>70?P.terra:res.score>50?P.gold:P.s}}>{res.score}/100</strong></div>}</div>
+        <button className="btn btn-g" onClick={()=>{setFile(null);setRes(null);setView('liste');}}>← Retour à la liste</button>
+      </div>
+      {load&&<div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:12}}><div style={{width:32,height:32,borderRadius:'50%',border:`3px solid var(--bdr)`,borderTopColor:P.s,animation:'spin 1s linear infinite'}}/><div style={{fontSize:13,color:'var(--txm)'}}>Analyse en cours…</div></div>}
+      {res&&(
+        <div className="split">
+          <div className="sl-left"><div style={{fontFamily:'Georgia,serif',fontSize:14,fontWeight:700,color:P.sd,marginBottom:10}}>Résultats de l'analyse</div><div style={{whiteSpace:'pre-wrap',fontSize:12,lineHeight:1.85,color:'var(--tx)'}}>{res.text}</div></div>
+          <div className="sl-right">
+            <div style={{fontSize:12,fontWeight:700,color:P.sd,marginBottom:8}}>📅 Dates clés</div>
+            {res.dates.map((d,i)=>(
+              <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 9px',borderRadius:7,marginBottom:5,background:d.t==='risk'?'rgba(184,92,62,0.06)':d.t==='warn'?'rgba(201,169,97,0.06)':'var(--bg)',border:`1px solid ${d.t==='risk'?P.terra+'33':d.t==='warn'?P.gold+'33':'var(--bdr)'}`}}>
+                <span style={{fontSize:11,color:'var(--txm)'}}>{d.l}</span><span style={{fontSize:11,fontWeight:700,color:d.t==='risk'?P.terra:d.t==='warn'?P.gold:P.s}}>{d.d}</span>
+              </div>
+            ))}
+            <button className="btn btn-s" style={{width:'100%',justifyContent:'center',marginTop:10,fontSize:12}}>Voir le prompt →</button>
+            <button className="btn btn-g" style={{width:'100%',justifyContent:'center',marginTop:6,fontSize:12}} onClick={()=>navigator.clipboard?.writeText(res.text)}>📋 Copier</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EvalFournisseurs(){
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd,marginBottom:3}}>Évaluation Fournisseurs</h2>
+      <p style={{color:'var(--txm)',fontSize:13,marginBottom:18}}>Scorecards, suivi de performance et plans de progrès</p>
+      <div className="g2">
+        {SUPPLIERS.slice(0,4).map(s=>(
+          <div key={s.id} className="card card-hover cp">
+            <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:10}}>
+              <div style={{width:34,height:34,borderRadius:8,background:'rgba(122,139,111,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:P.s}}>{s.name[0]}</div>
+              <div style={{flex:1}}><div style={{fontWeight:700,fontSize:13,color:'var(--txs)'}}>{s.name}</div><div style={{fontSize:10,color:'var(--txm)'}}>{s.sec}</div></div>
+              <span style={{fontFamily:'Georgia,serif',fontSize:20,fontWeight:700,color:P.s}}>{s.score}</span>
+            </div>
+            <RadarChart data={RADAR_D} dk="A" color={P.s} h={150}/>
+            <button className="btn btn-g" style={{width:'100%',justifyContent:'center',marginTop:7,fontSize:11}}>Préparer la QBR →</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Risques(){
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd,marginBottom:3}}>Gestion des Risques Fournisseurs</h2>
+      <p style={{color:'var(--txm)',fontSize:13,marginBottom:18}}>Matrice de risque et plans de mitigation</p>
+      <div className="g2">
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:12}}>Matrice probabilité / impact</div>
+          <div style={{height:240,position:'relative',background:'linear-gradient(to top left,rgba(184,92,62,0.07),rgba(201,169,97,0.04),rgba(122,139,111,0.04))',borderRadius:9,border:'1px solid var(--bdr)',overflow:'hidden'}}>
+            <div style={{position:'absolute',top:8,right:8,fontSize:9,color:'var(--txm)'}}>Impact →</div>
+            <div style={{position:'absolute',bottom:8,left:8,fontSize:9,color:'var(--txm)',writingMode:'vertical-lr',transform:'rotate(180deg)'}}>Probabilité →</div>
+            {SUPPLIERS.map((s,i)=>{
+              const x=(30+i*55)%90+5, y=(20+i*37)%80+10;
+              const rc={faible:P.s,modéré:P.gold,élevé:P.terra};
+              return <div key={i} title={s.name} style={{position:'absolute',left:`${x}%`,top:`${y}%`,width:28,height:28,borderRadius:'50%',background:rc[s.risk]||P.s,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'#fff',cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,0.14)',transform:'translate(-50%,-50%)'}}>{s.name[0]}</div>;
+            })}
+          </div>
+        </div>
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:12}}>Alertes risques actives</div>
+          {SUPPLIERS.map((s,i)=>{
+            const rc={faible:P.s,modéré:P.gold,élevé:P.terra};
+            return (
+              <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 0',borderBottom:'1px solid var(--bdr)'}}>
+                <span style={{width:7,height:7,borderRadius:'50%',background:rc[s.risk],flexShrink:0}}/>
+                <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:'var(--txs)'}}>{s.name}</div><div style={{fontSize:10,color:'var(--txm)'}}>Risque {s.risk} · {s.sec}</div></div>
+                <span className="badge" style={{background:rc[s.risk]+'18',color:rc[s.risk],border:`1px solid ${rc[s.risk]}33`,fontSize:9}}>{s.score}/100</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Rse(){
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd,marginBottom:3}}>RSE / ESG / Conformité</h2>
+      <p style={{color:'var(--txm)',fontSize:13,marginBottom:18}}>Suivi de la performance environnementale et sociale</p>
+      <div className="g4" style={{marginBottom:14}}>
+        {[{l:'Score ESG moyen',v:'72/100',c:P.s},{l:'Fournisseurs CSRD prêts',v:'38%',c:P.gold},{l:'Empreinte Scope 3',v:'12 400 tCO₂',c:P.terra},{l:'Questionnaires envoyés',v:'31/47',c:P.sd}].map(k=><div key={k.l} className="kpi"><div className="kpi-v" style={{color:k.c}}>{k.v}</div><div className="kpi-l">{k.l}</div></div>)}
+      </div>
+      <div className="g2">
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:12}}>Checklist Devoir de Vigilance</div>
+          {[{i:'Loi Sapin II — Anti-corruption',ok:true},{i:'CSRD — Rapport durabilité',ok:false},{i:'CS3D — Due diligence chaîne valeur',ok:false},{i:'CBAM — Mécanisme carbone frontières',ok:true},{i:'Questionnaire ESG envoyé (fournisseurs A)',ok:true}].map((c,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 0',borderBottom:'1px solid var(--bdr)',fontSize:12}}>
+              <span style={{fontSize:14,color:c.ok?P.s:P.terra}}>{c.ok?'✅':'○'}</span>
+              <span style={{flex:1,color:c.ok?'var(--tx)':'var(--txm)'}}>{c.i}</span>
+              <span className={`badge ${c.ok?'b-sage':'b-terra'}`}>{c.ok?'Conforme':'À traiter'}</span>
+            </div>
+          ))}
+        </div>
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>Scores ESG fournisseurs</div>
+          <BarChart data={SUPPLIERS.map(s=>({name:s.name.split(' ')[0],esg:Math.floor(s.score*.85+10)}))} dk="esg" h={200}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Workflows(){
+  const reqs=[
+    {id:'DA-2026-089',t:'Renouvellement contrat flotte',m:'320 K€',step:2,steps:['Demandeur','Manager','Achats','Direction'],u:true},
+    {id:'DA-2026-091',t:'Achat fournitures bureau Q2',m:'12 K€',step:1,steps:['Demandeur','Achats'],u:false},
+    {id:'DA-2026-094',t:'Prestation conseil RH',m:'45 K€',step:1,steps:['Demandeur','Manager','Achats'],u:false},
+    {id:'DA-2026-096',t:'Maintenance préventive CVC',m:'89 K€',step:3,steps:['Demandeur','Manager','Achats','Direction'],u:true},
+  ];
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd,marginBottom:3}}>Workflows d'approbation</h2>
+      <p style={{color:'var(--txm)',fontSize:13,marginBottom:18}}>Circuit de validation et suivi des demandes</p>
+      {reqs.map(r=>(
+        <div key={r.id} className="card cp" style={{marginBottom:10}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:11}}>
+            {r.u&&<span className="badge b-terra">URGENT</span>}
+            <span style={{fontSize:10,color:'var(--txm)',fontFamily:'monospace'}}>{r.id}</span>
+            <span style={{fontWeight:700,fontSize:13,color:'var(--txs)',flex:1}}>{r.t}</span>
+            <span style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.s}}>{r.m}</span>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:0}}>
+            {r.steps.map((s,i)=>(
+              <React.Fragment key={i}>
+                <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+                  <div style={{width:26,height:26,borderRadius:'50%',border:`2px solid ${i<r.step?P.s:i===r.step?P.sd:'var(--bdr)'}`,background:i<r.step?P.s:i===r.step?P.sd:'var(--bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:i<=r.step?'#fff':'var(--txm)'}}>
+                    {i<r.step?'✓':i+1}
+                  </div>
+                  <span style={{fontSize:9,color:i===r.step?P.sd:'var(--txm)',fontWeight:i===r.step?700:400,maxWidth:55,textAlign:'center',lineHeight:1.2}}>{s}</span>
+                </div>
+                {i<r.steps.length-1&&<div style={{width:32,height:2,background:i<r.step?P.s:'var(--bdr)',flexShrink:0,marginBottom:14}}/>}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PromptsLibrary(){
+  const [cat,setCat]=useState('Tous');
+  const [sel,setSel]=useState(PROMPTS[0]);
+  const [tab,setTab]=useState('Vue');
+  const [edit,setEdit]=useState(PROMPTS[0].content);
+  const [sbRes,setSbRes]=useState('');const [sbLoad,setSbLoad]=useState(false);
+  useEffect(()=>{setEdit(sel.content);setSbRes('');setTab('Vue');},[sel.id]);
+  const CATS=['Tous','Contrats','Emails','TCO','Sourcing','Risques','Reporting','Personnalisés'];
+  const filtered=cat==='Tous'?PROMPTS:PROMPTS.filter(p=>p.cat===cat||(cat==='Personnalisés'&&p.badge==='Perso'));
+  const bStyle=(b)=>b==='Système'?'b-sys':b==='Équipe'?'b-team':'b-perso';
+  const hlVars=(text)=>text.split(/(\{[^}]+\})/g).map((p,i)=>p.startsWith('{')?<span key={i} style={{color:P.s,fontWeight:700,background:'rgba(122,139,111,0.09)',borderRadius:3,padding:'0 2px'}}>{p}</span>:p);
+  const runSandbox=async()=>{
+    setSbLoad(true);setSbRes('');
+    const prompt=(tab==='Édition'?edit:sel.content).replace(/\{[^}]+\}/g,m=>`[DEMO-${m}]`);
+    try{const t=await window.claude.complete({messages:[{role:'user',content:`Utilise ce prompt avec des données fictives réalistes pour une démonstration (en français):\n\n${prompt}`}]});setSbRes(t);}
+    catch(e){setSbRes('Erreur: '+e.message);}
+    setSbLoad(false);
+  };
+  const VERS=[{v:'V4.1',d:'12 avr. 2026',a:'Admin',n:'Ajout décomposition score ESG'},{v:'V4.0',d:'2 mars 2026',a:'Admin',n:'Refonte structure JSON'},{v:'V3.2',d:'15 jan. 2026',a:'M. Dupont',n:'Ajout clause RGPD'},{v:'V3.1',d:'8 déc. 2025',a:'Admin',n:'Correction format réponse'}];
+  return (
+    <div className="fi" style={{display:'flex',height:'100%',overflow:'hidden'}}>
+      {/* Categories */}
+      <div style={{width:172,flexShrink:0,borderRight:'1px solid var(--bdr)',padding:'12px 8px',background:'var(--card)',overflow:'auto'}}>
+        <div style={{fontSize:9,fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',color:'var(--txm)',marginBottom:7,padding:'0 6px'}}>Catégories</div>
+        {CATS.map(c=>(
+          <button key={c} onClick={()=>setCat(c)} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'6px 9px',borderRadius:7,border:'none',cursor:'pointer',background:cat===c?'rgba(122,139,111,0.11)':'transparent',color:cat===c?P.sd:'var(--txm)',fontWeight:cat===c?700:500,fontSize:12,marginBottom:2,transition:'all .1s'}}>
+            {c}<span style={{fontSize:10,background:'var(--bg)',borderRadius:10,padding:'1px 5px',color:'var(--txm)'}}>{c==='Tous'?PROMPTS.length:PROMPTS.filter(p=>p.cat===c||(c==='Personnalisés'&&p.badge==='Perso')).length||''}</span>
+          </button>
+        ))}
+        <hr className="div"/>
+        <div style={{padding:'8px 9px',borderRadius:8,background:'rgba(201,169,97,0.08)',border:'1px solid rgba(201,169,97,0.18)'}}>
+          <div style={{fontSize:10,fontWeight:700,color:'#8A5E10',marginBottom:5}}>💡 Bonnes pratiques</div>
+          {['Soyez spécifique sur le format','Indiquez la langue souhaitée','Précisez le niveau d\'expertise','Donnez des exemples (few-shot)','Limitez à 1 tâche par prompt'].map((t,i)=><div key={i} style={{fontSize:10,color:'var(--txm)',marginBottom:3,lineHeight:1.4}}>· {t}</div>)}
+        </div>
+      </div>
+      {/* List */}
+      <div style={{width:268,flexShrink:0,borderRight:'1px solid var(--bdr)',overflow:'auto',padding:'12px 10px',scrollbarWidth:'thin'}}>
+        <div style={{fontSize:9,fontWeight:700,letterSpacing:'1px',textTransform:'uppercase',color:'var(--txm)',marginBottom:9}}>{filtered.length} prompts</div>
+        {filtered.map(p=>(
+          <div key={p.id} className={`pcard ${sel?.id===p.id?'sel':''}`} onClick={()=>setSel(p)}>
+            <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:5,marginBottom:4}}>
+              <div style={{fontSize:12,fontWeight:700,color:'var(--txs)',lineHeight:1.3,flex:1}}>{p.name}</div>
+              <span className={`badge ${bStyle(p.badge)}`}>{p.badge}</span>
+            </div>
+            <div style={{fontSize:11,color:'var(--txm)',lineHeight:1.4,marginBottom:6}}>{p.desc}</div>
+            <div style={{display:'flex',alignItems:'center',gap:7,fontSize:10,color:'var(--txm)'}}>
+              <span className="badge b-sage">{p.ver}</span><span>👤 {p.author}</span><span style={{marginLeft:'auto'}}>🔁 {p.uses}×</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Detail */}
+      {sel&&(
+        <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+          <div style={{padding:'14px 18px',borderBottom:'1px solid var(--bdr)',flexShrink:0,background:'var(--card)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}>
+              <h3 style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,flex:1}}>{sel.name}</h3>
+              <span className={`badge ${bStyle(sel.badge)}`}>{sel.badge}</span>
+              <span className="badge b-gold">{sel.ver}</span>
+            </div>
+            <div style={{fontSize:11,color:'var(--txm)',marginBottom:9}}>Mis à jour le {sel.upd} par {sel.author} · {sel.uses} utilisations · ~{Math.round(sel.content.length/4)} tokens</div>
+            <div style={{display:'flex',gap:5}}>
+              {['Vue','Édition','Versions','Sandbox'].map(t=><button key={t} className={`tab ${tab===t?'on':''}`} onClick={()=>setTab(t)}>{t}</button>)}
+              <div style={{flex:1}}/>
+              <button className="btn btn-p" style={{fontSize:11,padding:'5px 13px'}} onClick={()=>setTab('Sandbox')}>▶ Tester</button>
+            </div>
+          </div>
+          <div style={{flex:1,overflow:'auto',padding:'16px 18px',scrollbarWidth:'thin'}}>
+            {tab==='Vue'&&(
+              <div>
+                <div style={{fontSize:12,color:'var(--txm)',marginBottom:9}}>Les variables <span style={{color:P.s,fontWeight:700,background:'rgba(122,139,111,0.09)',borderRadius:3,padding:'0 3px'}}>{'{exemple}'}</span> sont remplacées automatiquement à l'exécution.</div>
+                <div className="pcontent">{hlVars(sel.content)}</div>
+              </div>
+            )}
+            {tab==='Édition'&&(
+              <div>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:9}}>
+                  <div style={{fontSize:12,color:'var(--txm)'}}>Modifiez le prompt ci-dessous.</div>
+                  <button className="btn btn-g" style={{fontSize:11}} onClick={()=>setEdit(sel.content)}>↩ Réinitialiser</button>
+                </div>
+                <textarea className="inp" value={edit} onChange={e=>setEdit(e.target.value)} style={{minHeight:320,fontFamily:'monospace',fontSize:11.5,lineHeight:1.75}}/>
+                <div style={{marginTop:8,padding:'7px 11px',background:'rgba(201,169,97,0.06)',borderRadius:7,border:'1px solid rgba(201,169,97,0.18)',fontSize:11,color:'#8A5E10'}}>
+                  💡 IA suggère : Ajoutez un exemple few-shot pour améliorer la cohérence du format de réponse.
+                </div>
+              </div>
+            )}
+            {tab==='Versions'&&(
+              <div>
+                {VERS.map((v,i)=>(
+                  <div key={i} style={{position:'relative',paddingLeft:26,paddingBottom:18}}>
+                    <div style={{position:'absolute',left:0,top:4,width:14,height:14,borderRadius:'50%',background:i===0?P.s:'var(--card2)',border:`2px solid ${i===0?P.s:'var(--bdr)'}`,zIndex:1}}/>
+                    {i<VERS.length-1&&<div style={{position:'absolute',left:6,top:18,bottom:0,width:2,background:'var(--bdr)'}}/>}
+                    <div style={{background:'var(--card)',border:'1px solid var(--bdr)',borderRadius:9,padding:'9px 12px'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:3}}>
+                        <span className="badge b-sage">{v.v}</span>
+                        <span style={{fontSize:11,color:'var(--txm)'}}>{v.d} — {v.a}</span>
+                        {i>0&&<button className="btn btn-g" style={{fontSize:10,padding:'2px 7px',marginLeft:'auto'}}>Restaurer</button>}
+                      </div>
+                      <div style={{fontSize:12,color:'var(--tx)'}}>{v.n}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {tab==='Sandbox'&&(
+              <div>
+                <div style={{marginBottom:12}}>
+                  <div style={{fontSize:12,fontWeight:600,color:P.sd,marginBottom:4}}>Test avec données fictives</div>
+                  <div style={{fontSize:11,color:'var(--txm)',marginBottom:10}}>L'IA va compléter les variables avec des exemples réalistes.</div>
+                  <button className="btn btn-p" onClick={runSandbox} disabled={sbLoad}>{sbLoad?'Exécution…':'▶ Exécuter le prompt'}</button>
+                </div>
+                {sbRes&&(<><hr className="div"/><div style={{fontSize:10,fontWeight:700,color:'var(--txm)',letterSpacing:'.5px',textTransform:'uppercase',marginBottom:7}}>Résultat</div><div className="pcontent" style={{fontFamily:'inherit',fontSize:12,lineHeight:1.85}}>{sbRes}</div></>)}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Comparateur d'Offres + Cost Saving / Cost Avoidance ─────
+const OFFERS_DEMO = [
+  {id:1, sup:'Dell France', price:1280, qty:25, ship:450, warranty:3, delay:12, rse:72, pay:'30j', total:0},
+  {id:2, sup:'Lenovo / Computacenter', price:1185, qty:25, ship:0, warranty:4, delay:5, rse:84, pay:'45j', total:0},
+  {id:3, sup:'HP Inc.', price:1340, qty:25, ship:280, warranty:2, delay:10, rse:68, pay:'30j', total:0},
+  {id:4, sup:'Asus Pro', price:1095, qty:25, ship:520, warranty:1, delay:21, rse:55, pay:'comptant', total:0},
+];
+OFFERS_DEMO.forEach(o=>{o.total=o.price*o.qty+o.ship;});
+
+const SAVINGS_LOG = [
+  {id:'CS-2026-014', type:'Cost Saving', cat:'IT', sup:'Lenovo', desc:'Renégociation parc PC portables', amt:11875, baseline:'Offre Dell (référence marché)', status:'Validé', valid:'M. Durand (DAF)', date:'28 avr. 2026'},
+  {id:'CA-2026-008', type:'Cost Avoidance', cat:'Énergie', sup:'Engie', desc:'Évitement hausse tarif index ICHT', amt:18400, baseline:'Tarif catalogue 2026 sans négo', status:'Validé', valid:'M. Durand (DAF)', date:'14 avr. 2026'},
+  {id:'CS-2026-011', type:'Cost Saving', cat:'Prestations', sup:'Veolia', desc:'Renégo contrat nettoyage -8%', amt:11600, baseline:'Tarif contrat précédent', status:'Validé', valid:'C. Petit (Achats)', date:'2 avr. 2026'},
+  {id:'CA-2026-006', type:'Cost Avoidance', cat:'IT', sup:'Adobe', desc:'Résiliation 14 licences inactives', amt:9660, baseline:'Renouvellement automatique prévu', status:'En attente', valid:'—', date:'1 mai 2026'},
+  {id:'CS-2026-018', type:'Cost Saving', cat:'EPI', sup:'Decathlon Pro', desc:'Passage tarif Compte Entreprise', amt:4200, baseline:'Tarif standard', status:'En attente', valid:'—', date:'30 avr. 2026'},
+  {id:'CA-2026-009', type:'Cost Avoidance', cat:'BTP', sup:'Lafarge', desc:'Stop hausse indexation matière', amt:7800, baseline:'Application clause d\'indexation', status:'Refusé', valid:'M. Durand — manque justificatif', date:'25 avr. 2026'},
+];
+
+function Comparateur(){
+  const [tab,setTab]=useState('compare');
+  const [offers,setOffers]=useState(OFFERS_DEMO);
+  const [weights,setWeights]=useState({prix:35,qual:20,delai:15,garantie:15,rse:15});
+  const [savings,setSavings]=useState(SAVINGS_LOG);
+  const [showForm,setShowForm]=useState(false);
+  const [form,setForm]=useState({type:'Cost Saving',cat:'IT',sup:'',desc:'',amt:'',baseline:''});
+
+  const minPrice=Math.min(...offers.map(o=>o.total));
+  const maxPrice=Math.max(...offers.map(o=>o.total));
+  const cheapest=offers.find(o=>o.total===minPrice);
+
+  const score=(o)=>{
+    const sPrix=100-((o.total-minPrice)/(maxPrice-minPrice||1))*100;
+    const sQual=o.warranty*20+(o.warranty>=3?20:0);
+    const sDelai=Math.max(0,100-o.delay*4);
+    const sGar=o.warranty*22;
+    const sRse=o.rse;
+    return Math.round((sPrix*weights.prix+sQual*weights.qual+sDelai*weights.delai+sGar*weights.garantie+sRse*weights.rse)/100);
+  };
+  const scored=offers.map(o=>({...o,score:score(o)}));
+  const winner=scored.reduce((a,b)=>a.score>b.score?a:b);
+  const baselineMax=Math.max(...offers.map(o=>o.total));
+  const winnerSavings=baselineMax-winner.total;
+
+  const validated=savings.filter(s=>s.status==='Validé');
+  const pending=savings.filter(s=>s.status==='En attente');
+  const totalCS=validated.filter(s=>s.type==='Cost Saving').reduce((a,b)=>a+b.amt,0);
+  const totalCA=validated.filter(s=>s.type==='Cost Avoidance').reduce((a,b)=>a+b.amt,0);
+  const totalPending=pending.reduce((a,b)=>a+b.amt,0);
+
+  const submitSaving=()=>{
+    if(!form.desc||!form.amt) return;
+    const newId=`${form.type==='Cost Saving'?'CS':'CA'}-2026-${(savings.length+20).toString().padStart(3,'0')}`;
+    setSavings([{id:newId,...form,amt:+form.amt,status:'En attente',valid:'—',date:new Date().toLocaleDateString('fr-FR')},...savings]);
+    setForm({type:'Cost Saving',cat:'IT',sup:'',desc:'',amt:'',baseline:''});
+    setShowForm(false);
+  };
+  const validate=(id,decision)=>{
+    setSavings(savings.map(s=>s.id===id?{...s,status:decision,valid:decision==='Validé'?'M. Durand (DAF)':'Refusé — '+(prompt('Motif ?')||'non motivé'),date:new Date().toLocaleDateString('fr-FR')}:s));
+  };
+  const pushToSavings=(amt,desc,sup,type='Cost Saving')=>{
+    const newId=`${type==='Cost Saving'?'CS':'CA'}-2026-${(savings.length+30).toString().padStart(3,'0')}`;
+    setSavings([{id:newId,type,cat:'IT',sup,desc,amt,baseline:'Comparatif d\'offres '+winner.sup,status:'En attente',valid:'—',date:new Date().toLocaleDateString('fr-FR')},...savings]);
+    setTab('savings');
+  };
+
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+        <div>
+          <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd}}>Comparateur d'offres & Suivi des Savings</h2>
+          <p style={{color:'var(--txm)',fontSize:13}}>Analyse comparative + Cost Saving / Cost Avoidance avec validation</p>
+        </div>
+      </div>
+      <div className="tab-row">
+        <button className={`tab ${tab==='compare'?'on':''}`} onClick={()=>setTab('compare')}>📊 Comparatif d'offres</button>
+        <button className={`tab ${tab==='savings'?'on':''}`} onClick={()=>setTab('savings')}>💰 Savings Tracker</button>
+        <button className={`tab ${tab==='analytics'?'on':''}`} onClick={()=>setTab('analytics')}>📈 Analytics</button>
+      </div>
+
+      {tab==='compare'&&(
+        <div>
+          <div className="card cp" style={{marginBottom:14}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+              <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd}}>Cas démo : Renouvellement 25 ordinateurs portables</div>
+              <span className="badge b-gold">4 offres reçues</span>
+            </div>
+            <div style={{fontSize:11,fontWeight:700,color:'var(--txm)',marginBottom:6,letterSpacing:'.5px'}}>PONDÉRATION DES CRITÈRES (somme = {Object.values(weights).reduce((a,b)=>a+b,0)}%)</div>
+            <div className="g4" style={{gap:10}}>
+              {Object.entries(weights).map(([k,v])=>(
+                <div key={k}>
+                  <div style={{fontSize:11,color:'var(--txm)',marginBottom:3,textTransform:'capitalize'}}>{k} : <strong style={{color:P.sd}}>{v}%</strong></div>
+                  <input type="range" min="0" max="50" value={v} onChange={e=>setWeights({...weights,[k]:+e.target.value})} style={{width:'100%',accentColor:P.s}}/>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card cp" style={{marginBottom:14,overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+              <thead>
+                <tr style={{borderBottom:'2px solid var(--bdr)'}}>
+                  <th style={{textAlign:'left',padding:'8px 6px',color:'var(--txm)',fontWeight:600,fontSize:11}}>Critère</th>
+                  {scored.map(o=>(
+                    <th key={o.id} style={{textAlign:'left',padding:'8px 6px',color:o.id===winner.id?P.sd:'var(--txs)',fontWeight:700}}>
+                      {o.id===winner.id&&<span style={{marginRight:5}}>🏆</span>}
+                      {o.sup}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  {l:'Prix unitaire HT',k:'price',fmt:v=>v+' €',best:'min'},
+                  {l:'Frais de port',k:'ship',fmt:v=>v+' €',best:'min'},
+                  {l:'Total HT livré',k:'total',fmt:v=>v.toLocaleString('fr-FR')+' €',best:'min'},
+                  {l:'Délai (jours)',k:'delay',fmt:v=>v+' j',best:'min'},
+                  {l:'Garantie (ans)',k:'warranty',fmt:v=>v+' ans',best:'max'},
+                  {l:'Score RSE /100',k:'rse',fmt:v=>v,best:'max'},
+                  {l:'Paiement',k:'pay',fmt:v=>v,best:null},
+                ].map((row,ri)=>{
+                  const vals=scored.map(o=>o[row.k]);
+                  const bestV=row.best==='min'?Math.min(...vals.filter(v=>typeof v==='number')):row.best==='max'?Math.max(...vals.filter(v=>typeof v==='number')):null;
+                  return (
+                    <tr key={ri} style={{borderBottom:'1px solid var(--bdr)'}}>
+                      <td style={{padding:'8px 6px',color:'var(--txm)',fontWeight:500}}>{row.l}</td>
+                      {scored.map(o=>(
+                        <td key={o.id} style={{padding:'8px 6px',background:o[row.k]===bestV?'rgba(168,184,155,0.18)':'transparent',fontWeight:o[row.k]===bestV?700:500,color:o[row.k]===bestV?P.sd:'var(--tx)',borderRadius:5}}>
+                          {row.fmt(o[row.k])}
+                          {o[row.k]===bestV&&<span style={{marginLeft:4,color:P.s}}>✓</span>}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+                <tr style={{borderTop:'2px solid var(--bdr)',background:'rgba(122,139,111,0.05)'}}>
+                  <td style={{padding:'10px 6px',fontWeight:700,color:P.sd}}>Score pondéré IA /100</td>
+                  {scored.map(o=>(
+                    <td key={o.id} style={{padding:'10px 6px',fontFamily:'Georgia,serif',fontSize:18,fontWeight:700,color:o.id===winner.id?P.s:'var(--tx)'}}>{o.score}</td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="card cp" style={{background:'linear-gradient(135deg,rgba(122,139,111,0.08),rgba(201,169,97,0.05))',border:`1.5px solid ${P.s}33`}}>
+            <div style={{display:'flex',alignItems:'flex-start',gap:14}}>
+              <div style={{fontSize:34}}>🏆</div>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:'Georgia,serif',fontSize:16,fontWeight:700,color:P.sd,marginBottom:4}}>Recommandation IA : {winner.sup}</div>
+                <div style={{fontSize:12,color:'var(--tx)',lineHeight:1.65,marginBottom:10}}>
+                  Score pondéré <strong>{winner.score}/100</strong> — Meilleure combinaison prix/qualité/délai/RSE.
+                  Économie réelle vs offre la plus chère : <strong style={{color:P.s}}>{winnerSavings.toLocaleString('fr-FR')} €</strong> ({Math.round(winnerSavings/baselineMax*100)}%).
+                </div>
+                <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
+                  <button className="btn btn-p" style={{fontSize:12}} onClick={()=>pushToSavings(winnerSavings,`Comparatif PC portables — choix ${winner.sup}`,winner.sup,'Cost Saving')}>💰 Déclarer en Cost Saving</button>
+                  <button className="btn btn-s" style={{fontSize:12}} onClick={()=>pushToSavings(winnerSavings,`Évitement écart prix max — ${winner.sup}`,winner.sup,'Cost Avoidance')}>🛡️ Déclarer en Cost Avoidance</button>
+                  <button className="btn btn-g">📄 Exporter PDF</button>
+                  <button className="btn btn-g">✉️ Notifier le fournisseur</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab==='savings'&&(
+        <div>
+          <div className="g4" style={{marginBottom:14}}>
+            <div className="kpi"><div className="kpi-l">💰 Cost Saving validé</div><div className="kpi-v" style={{color:P.s}}>{totalCS.toLocaleString('fr-FR')} €</div><div className="kpi-d up">{validated.filter(s=>s.type==='Cost Saving').length} dossiers</div></div>
+            <div className="kpi"><div className="kpi-l">🛡️ Cost Avoidance validé</div><div className="kpi-v" style={{color:P.gold}}>{totalCA.toLocaleString('fr-FR')} €</div><div className="kpi-d up">{validated.filter(s=>s.type==='Cost Avoidance').length} dossiers</div></div>
+            <div className="kpi"><div className="kpi-l">⏳ En attente validation</div><div className="kpi-v" style={{color:P.terra}}>{totalPending.toLocaleString('fr-FR')} €</div><div className="kpi-d">{pending.length} à arbitrer</div></div>
+            <div className="kpi"><div className="kpi-l">🎯 Total Savings YTD</div><div className="kpi-v">{(totalCS+totalCA).toLocaleString('fr-FR')} €</div><div className="kpi-d up">+12.4% vs N-1</div></div>
+          </div>
+
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+            <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd}}>Registre des économies</div>
+            <button className="btn btn-p" onClick={()=>setShowForm(!showForm)}>+ Déclarer une économie</button>
+          </div>
+
+          {showForm&&(
+            <div className="card cp" style={{marginBottom:12,border:`1.5px solid ${P.s}`}}>
+              <div style={{fontWeight:700,color:P.sd,marginBottom:9}}>Nouvelle déclaration de Saving</div>
+              <div className="g3" style={{gap:9,marginBottom:9}}>
+                <div><label style={{fontSize:11,color:'var(--txm)'}}>Type</label><select className="inp" value={form.type} onChange={e=>setForm({...form,type:e.target.value})}><option>Cost Saving</option><option>Cost Avoidance</option></select></div>
+                <div><label style={{fontSize:11,color:'var(--txm)'}}>Catégorie</label><select className="inp" value={form.cat} onChange={e=>setForm({...form,cat:e.target.value})}><option>IT</option><option>BTP</option><option>Énergie</option><option>Prestations</option><option>EPI</option><option>Marketing</option></select></div>
+                <div><label style={{fontSize:11,color:'var(--txm)'}}>Fournisseur</label><input className="inp" value={form.sup} onChange={e=>setForm({...form,sup:e.target.value})} placeholder="Ex: Lenovo"/></div>
+              </div>
+              <div className="g2" style={{gap:9,marginBottom:9}}>
+                <div><label style={{fontSize:11,color:'var(--txm)'}}>Description / Action</label><input className="inp" value={form.desc} onChange={e=>setForm({...form,desc:e.target.value})} placeholder="Ex: Renégociation contrat -8%"/></div>
+                <div><label style={{fontSize:11,color:'var(--txm)'}}>Baseline (référence)</label><input className="inp" value={form.baseline} onChange={e=>setForm({...form,baseline:e.target.value})} placeholder="Ex: Tarif contrat précédent"/></div>
+              </div>
+              <div style={{display:'flex',gap:9,alignItems:'flex-end'}}>
+                <div style={{flex:1}}><label style={{fontSize:11,color:'var(--txm)'}}>Montant économisé (€)</label><input type="number" className="inp" value={form.amt} onChange={e=>setForm({...form,amt:e.target.value})} placeholder="0"/></div>
+                <button className="btn btn-p" onClick={submitSaving}>Soumettre pour validation</button>
+                <button className="btn btn-g" onClick={()=>setShowForm(false)}>Annuler</button>
+              </div>
+              <div style={{marginTop:9,padding:'7px 10px',background:'rgba(201,169,97,0.07)',borderRadius:7,fontSize:11,color:'#8A5E10'}}>
+                💡 Différence : <strong>Cost Saving</strong> = économie réelle sur prix antérieur. <strong>Cost Avoidance</strong> = hausse évitée vs référence projetée.
+              </div>
+            </div>
+          )}
+
+          <div className="card" style={{overflow:'hidden'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+              <thead>
+                <tr style={{background:'var(--bg)',borderBottom:'1px solid var(--bdr)'}}>
+                  {['Réf.','Type','Catégorie','Fournisseur','Description','Montant','Baseline','Statut','Validateur','Actions'].map(h=>(
+                    <th key={h} style={{textAlign:'left',padding:'9px 11px',fontSize:10,fontWeight:700,color:'var(--txm)',letterSpacing:'.5px',textTransform:'uppercase'}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {savings.map(s=>(
+                  <tr key={s.id} style={{borderBottom:'1px solid var(--bdr)'}}>
+                    <td style={{padding:'9px 11px',fontFamily:'monospace',fontSize:10.5,color:'var(--txm)'}}>{s.id}</td>
+                    <td style={{padding:'9px 11px'}}><span className={`badge ${s.type==='Cost Saving'?'b-sage':'b-gold'}`}>{s.type==='Cost Saving'?'💰 CS':'🛡️ CA'}</span></td>
+                    <td style={{padding:'9px 11px',fontSize:11.5}}>{s.cat}</td>
+                    <td style={{padding:'9px 11px',fontSize:11.5,fontWeight:600}}>{s.sup}</td>
+                    <td style={{padding:'9px 11px',fontSize:11.5,maxWidth:200}}>{s.desc}</td>
+                    <td style={{padding:'9px 11px',fontWeight:700,color:s.type==='Cost Saving'?P.s:P.gold,fontFamily:'Georgia,serif',fontSize:13}}>{s.amt.toLocaleString('fr-FR')} €</td>
+                    <td style={{padding:'9px 11px',fontSize:10.5,color:'var(--txm)',maxWidth:150}}>{s.baseline}</td>
+                    <td style={{padding:'9px 11px'}}>
+                      {s.status==='Validé'&&<span className="badge b-sage">✓ Validé</span>}
+                      {s.status==='En attente'&&<span className="badge b-gold">⏳ En attente</span>}
+                      {s.status==='Refusé'&&<span className="badge b-terra">✗ Refusé</span>}
+                    </td>
+                    <td style={{padding:'9px 11px',fontSize:10.5,color:'var(--txm)'}}>{s.valid}<div style={{fontSize:9,opacity:.7}}>{s.date}</div></td>
+                    <td style={{padding:'9px 11px'}}>
+                      {s.status==='En attente'?(
+                        <div style={{display:'flex',gap:4}}>
+                          <button onClick={()=>validate(s.id,'Validé')} style={{background:P.s,color:'#fff',border:'none',borderRadius:5,padding:'3px 7px',fontSize:10,cursor:'pointer',fontWeight:700}}>✓ Valider</button>
+                          <button onClick={()=>validate(s.id,'Refusé')} style={{background:'transparent',color:P.terra,border:`1px solid ${P.terra}`,borderRadius:5,padding:'3px 7px',fontSize:10,cursor:'pointer'}}>✗ Refuser</button>
+                        </div>
+                      ):(<button className="btn btn-g" style={{fontSize:10,padding:'3px 8px'}}>Voir</button>)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{marginTop:11,padding:'10px 13px',background:'rgba(122,139,111,0.06)',borderRadius:9,border:'1px solid var(--bdr)',fontSize:11.5,color:'var(--tx)'}}>
+            <strong style={{color:P.sd}}>📋 Workflow de validation :</strong> Acheteur déclare → Manager Achats vérifie → DAF arbitre (si &gt; 5k€) → Comptabilité enregistre. Toute économie validée alimente le KPI Savings YTD du tableau de bord et du reporting CODIR.
+          </div>
+        </div>
+      )}
+
+      {tab==='analytics'&&(
+        <div>
+          <div className="g2" style={{marginBottom:14}}>
+            <div className="card cp">
+              <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>Répartition CS vs CA</div>
+              <Donut data={[{name:'Cost Saving',value:Math.round(totalCS/(totalCS+totalCA)*100)||50,color:P.s},{name:'Cost Avoidance',value:Math.round(totalCA/(totalCS+totalCA)*100)||50,color:P.gold}]} h={170}/>
+            </div>
+            <div className="card cp">
+              <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>Savings par catégorie (€)</div>
+              <HBar data={['IT','Énergie','Prestations','EPI','BTP','Marketing'].map(c=>({name:c,val:Math.round(validated.filter(s=>s.cat===c).reduce((a,b)=>a+b.amt,0)/1000)||Math.floor(Math.random()*15+3)}))} h={170}/>
+            </div>
+          </div>
+          <div className="card cp">
+            <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>📈 Cumulé YTD vs Objectif</div>
+            <div style={{padding:'14px 0'}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:12}}>
+                <span>Réalisé : <strong style={{color:P.s}}>{(totalCS+totalCA).toLocaleString('fr-FR')} €</strong></span>
+                <span>Objectif annuel : <strong>500 000 €</strong></span>
+              </div>
+              <div className="ptrack" style={{height:14}}><div className="pfill" style={{width:Math.min(100,(totalCS+totalCA)/500000*100)+'%'}}/></div>
+              <div style={{marginTop:6,fontSize:11,color:'var(--txm)'}}>{Math.round((totalCS+totalCA)/500000*100)}% de l'objectif annuel atteint au 6 mai 2026</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Rédaction de contrats ──────────────────────────────────
+const CONTRACT_TYPES=[
+  {id:'achat',l:'Contrat d\'Achat',e:'🛒',d:'Fourniture de biens'},
+  {id:'presta',l:'Contrat de Prestation',e:'🤝',d:'Services et prestations intellectuelles'},
+  {id:'cadre',l:'Contrat-cadre',e:'📋',d:'Accord-cadre pluriannuel'},
+  {id:'nda',l:'NDA / Confidentialité',e:'🔒',d:'Accord de non-divulgation'},
+  {id:'sla',l:'SLA',e:'⚙️',d:'Service Level Agreement'},
+  {id:'partenariat',l:'Partenariat',e:'🌿',d:'Partenariat stratégique'},
+];
+
+const CLAUSES_LIB={
+  obligatoire:[
+    {id:'objet',n:'Objet du contrat',d:'Description précise de la prestation/fourniture',risk:'low'},
+    {id:'parties',n:'Identification des parties',d:'Coordonnées et représentants légaux',risk:'low'},
+    {id:'duree',n:'Durée & prise d\'effet',d:'Date de début, durée, fin',risk:'low'},
+    {id:'prix',n:'Prix & modalités de paiement',d:'Montant, échéancier, mode de règlement',risk:'low'},
+  ],
+  recommande:[
+    {id:'penalites',n:'Pénalités de retard',d:'Plafonné à 10% du contrat — recommandé 1% par semaine',risk:'med'},
+    {id:'reception',n:'Réception & contrôle qualité',d:'Conditions de validation et délai de contestation',risk:'low'},
+    {id:'garantie',n:'Garantie',d:'Durée et étendue de la garantie',risk:'low'},
+    {id:'resiliation',n:'Résiliation',d:'Conditions et préavis (3-6 mois usuels)',risk:'med'},
+    {id:'resp',n:'Limitation de responsabilité',d:'Plafond et exclusions',risk:'med'},
+    {id:'force',n:'Force majeure',d:'Définition et conséquences',risk:'low'},
+  ],
+  sensible:[
+    {id:'tacite',n:'Reconduction tacite',d:'⚠️ Risque d\'engagement involontaire — préavis impératif',risk:'high'},
+    {id:'exclu',n:'Exclusivité',d:'⚠️ Limite la concurrence — clause à négocier',risk:'high'},
+    {id:'penal_frn',n:'Pénalités fournisseur uniquement',d:'⚠️ Asymétrique — préférer une clause symétrique',risk:'high'},
+    {id:'index',n:'Indexation des prix',d:'Préciser indice et périodicité',risk:'med'},
+    {id:'ip',n:'Propriété intellectuelle',d:'Cession ou licence — clause juridique sensible',risk:'med'},
+    {id:'sous',n:'Sous-traitance',d:'Autorisation préalable nécessaire',risk:'med'},
+    {id:'data',n:'RGPD / Données personnelles',d:'Obligatoire si traitement de données',risk:'med'},
+    {id:'rse',n:'Engagements RSE',d:'Devoir de vigilance, ESG',risk:'low'},
+    {id:'sapin',n:'Anti-corruption (Sapin II)',d:'Obligatoire > 100M€ CA',risk:'med'},
+    {id:'litige',n:'Loi applicable & juridiction',d:'Préférer juridiction française',risk:'med'},
+  ],
+};
+
+function RedactionContrats(){
+  const [tab,setTab]=useState('builder');
+  const [ctype,setCtype]=useState('presta');
+  const [meta,setMeta]=useState({four:'',obj:'',duree:'12',montant:'',preavis:'3'});
+  const [picked,setPicked]=useState(['objet','parties','duree','prix','penalites','reception','garantie','resiliation','resp','force','litige']);
+  const [draft,setDraft]=useState('');
+  const [genLoad,setGenLoad]=useState(false);
+  const [analyse,setAnalyse]=useState(null);
+  const [anaLoad,setAnaLoad]=useState(false);
+  const [drag,setDrag]=useState(false);
+  const [upFile,setUpFile]=useState(null);
+  const fRef=useRef();
+
+  const togglePick=(id)=>setPicked(picked.includes(id)?picked.filter(x=>x!==id):[...picked,id]);
+
+  const generate=async()=>{
+    if(!meta.four||!meta.obj){alert('Renseignez fournisseur et objet');return;}
+    setGenLoad(true);setDraft('');
+    const all=[...CLAUSES_LIB.obligatoire,...CLAUSES_LIB.recommande,...CLAUSES_LIB.sensible];
+    const pickedClauses=picked.map(id=>all.find(c=>c.id===id)?.n).filter(Boolean).join(', ');
+    const tlabel=CONTRACT_TYPES.find(t=>t.id===ctype)?.l;
+    const prompt=`Tu es juriste senior expert achats. Rédige un ${tlabel} en français, format professionnel cabinet d'avocats.
+
+PARAMÈTRES :
+- Fournisseur : ${meta.four}
+- Objet : ${meta.obj}
+- Durée : ${meta.duree} mois
+- Montant : ${meta.montant||'à préciser'} € HT
+- Préavis résiliation : ${meta.preavis} mois
+
+CLAUSES À INTÉGRER (numérotées en articles) : ${pickedClauses}.
+
+Acheteuse : Mélanie Oudoire, Responsable Achats.
+
+Format : titre centré, "ENTRE LES SOUSSIGNÉS" puis articles numérotés (Article 1, 2…) avec rédaction juridique précise. Termine par signatures (Fait à ___, le ___, en deux exemplaires). Pas de markdown, texte brut juridique.`;
+    try{
+      const t=await window.claude.complete(prompt);
+      setDraft(t);setTab('preview');
+    }catch(e){setDraft('Erreur : '+e.message);}
+    setGenLoad(false);
+  };
+
+  const analyzeFile=async(content,name)=>{
+    setUpFile({name});setAnaLoad(true);setAnalyse(null);
+    const prompt=`Tu es juriste expert achats. Analyse ce contrat et retourne EXACTEMENT ce format JSON (sans markdown, juste le JSON) :
+{
+  "score": <nombre 0-100, plus haut = plus risqué>,
+  "type":"<type de contrat détecté>",
+  "synthese":"<résumé exécutif en 4 phrases pour la direction>",
+  "parties":["<partie 1>","<partie 2>"],
+  "montant":"<montant détecté ou non précisé>",
+  "duree":"<durée détectée>",
+  "dates":[{"label":"<libellé>","date":"<date>","type":"ok|warn|risk"}],
+  "clauses":[{"nom":"<nom clause>","extrait":"<extrait court>","niveau":"vert|orange|rouge","commentaire":"<analyse courte>"}],
+  "manquantes":["<clause manquante 1>","<clause manquante 2>"],
+  "recommandations":["<reco 1 négociation>","<reco 2>","<reco 3>"]
+}
+
+Contrat à analyser :
+${content.slice(0,4000)}`;
+    try{
+      const t=await window.claude.complete(prompt);
+      const m=t.match(/\{[\s\S]*\}/);
+      if(m){
+        const parsed=JSON.parse(m[0]);
+        setAnalyse(parsed);
+      }else{
+        setAnalyse({score:50,synthese:t,clauses:[],dates:[],manquantes:[],recommandations:[],parties:[],type:'?',montant:'?',duree:'?'});
+      }
+    }catch(e){
+      setAnalyse({score:0,synthese:'Erreur d\'analyse : '+e.message,clauses:[],dates:[],manquantes:[],recommandations:[],parties:[],type:'?',montant:'?',duree:'?'});
+    }
+    setAnaLoad(false);
+  };
+
+  const loadDemoAnalyse=()=>{
+    const demo=`CONTRAT DE PRESTATION DE SERVICES N° CP-2026-114
+
+ENTRE LES SOUSSIGNÉS :
+La société ACME France SAS, dont le siège est sis 12 rue Voltaire, 69003 Lyon, immatriculée au RCS de Lyon sous le numéro 814 552 109, représentée par M. Pierre Dumas en qualité de Directeur Général, ci-après dénommée « le Client »,
+D'une part,
+ET
+La société CleanPro Services SARL, dont le siège est sis 47 av. Jean Jaurès, 69007 Lyon, immatriculée au RCS de Lyon sous le numéro 521 887 443, représentée par Mme Sandrine Roy en qualité de Gérante, ci-après dénommée « le Prestataire »,
+D'autre part.
+
+ARTICLE 1 — OBJET
+Le Prestataire s'engage à assurer le nettoyage industriel des sites du Client situés à Lyon-Vaise et Villeurbanne.
+
+ARTICLE 2 — DURÉE
+Le présent contrat est conclu pour une durée de 36 mois à compter du 1er juin 2026. Il sera reconduit tacitement par périodes successives de 24 mois sauf dénonciation par lettre recommandée moyennant un préavis de 2 mois avant échéance.
+
+ARTICLE 3 — PRIX
+Le prix forfaitaire annuel est fixé à 285 000 € HT, payable par mensualités de 23 750 € HT, à 60 jours fin de mois. Indexation annuelle automatique selon indice INSEE des services généraux, plafonnée à +5%.
+
+ARTICLE 4 — PÉNALITÉS
+En cas de manquement constaté, le Client pourra appliquer une pénalité de 0,5% du montant mensuel par jour de retard. Aucune pénalité ne peut être appliquée au Client.
+
+ARTICLE 5 — EXCLUSIVITÉ
+Le Prestataire ne pourra contracter avec un concurrent du Client pendant toute la durée du contrat ET pendant 24 mois après son terme.
+
+ARTICLE 6 — RESPONSABILITÉ
+La responsabilité du Prestataire est limitée au montant des prestations facturées au cours des 3 derniers mois. Sont exclus les dommages indirects, immatériels, perte d'exploitation, perte de données.
+
+ARTICLE 7 — RÉSILIATION
+Préavis de 12 mois requis pour toute résiliation à l'initiative du Client. Aucune indemnité due par le Prestataire en cas de manquement.
+
+Fait à Lyon, le 15 mai 2026, en deux exemplaires originaux.`;
+    analyzeFile(demo,'CleanPro_contrat_demo.txt');
+  };
+
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <div style={{marginBottom:14}}>
+        <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd}}>Rédaction & Analyse de contrats</h2>
+        <p style={{color:'var(--txm)',fontSize:13}}>Construire un contrat par blocs · Analyser un contrat reçu · Recommandations IA</p>
+      </div>
+      <div className="tab-row">
+        <button className={`tab ${tab==='builder'?'on':''}`} onClick={()=>setTab('builder')}>✍️ Construire un contrat</button>
+        <button className={`tab ${tab==='preview'?'on':''}`} onClick={()=>setTab('preview')}>📄 Aperçu / Édition</button>
+        <button className={`tab ${tab==='upload'?'on':''}`} onClick={()=>setTab('upload')}>🔍 Analyser un contrat reçu</button>
+      </div>
+
+      {tab==='builder'&&(
+        <div className="g2" style={{gap:14,alignItems:'flex-start'}}>
+          <div>
+            <div className="card cp" style={{marginBottom:12}}>
+              <div style={{fontFamily:'Georgia,serif',fontSize:14,fontWeight:700,color:P.sd,marginBottom:9}}>1. Type de contrat</div>
+              <div className="g3" style={{gap:7}}>
+                {CONTRACT_TYPES.map(t=>(
+                  <button key={t.id} onClick={()=>setCtype(t.id)} style={{textAlign:'left',padding:'8px 10px',borderRadius:8,border:`1.5px solid ${ctype===t.id?P.s:'var(--bdr)'}`,background:ctype===t.id?'rgba(122,139,111,0.08)':'var(--card)',cursor:'pointer'}}>
+                    <div style={{fontSize:16,marginBottom:2}}>{t.e}</div>
+                    <div style={{fontSize:11.5,fontWeight:700,color:P.sd}}>{t.l}</div>
+                    <div style={{fontSize:10,color:'var(--txm)'}}>{t.d}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="card cp" style={{marginBottom:12}}>
+              <div style={{fontFamily:'Georgia,serif',fontSize:14,fontWeight:700,color:P.sd,marginBottom:9}}>2. Paramètres</div>
+              <div className="g2" style={{gap:8}}>
+                <div><label style={{fontSize:11,color:'var(--txm)'}}>Fournisseur</label><input className="inp" value={meta.four} onChange={e=>setMeta({...meta,four:e.target.value})} placeholder="Ex: CleanPro Services SARL"/></div>
+                <div><label style={{fontSize:11,color:'var(--txm)'}}>Objet</label><input className="inp" value={meta.obj} onChange={e=>setMeta({...meta,obj:e.target.value})} placeholder="Ex: Nettoyage tertiaire"/></div>
+                <div><label style={{fontSize:11,color:'var(--txm)'}}>Durée (mois)</label><input className="inp" type="number" value={meta.duree} onChange={e=>setMeta({...meta,duree:e.target.value})}/></div>
+                <div><label style={{fontSize:11,color:'var(--txm)'}}>Montant (€ HT)</label><input className="inp" type="number" value={meta.montant} onChange={e=>setMeta({...meta,montant:e.target.value})} placeholder="285000"/></div>
+                <div><label style={{fontSize:11,color:'var(--txm)'}}>Préavis (mois)</label><input className="inp" type="number" value={meta.preavis} onChange={e=>setMeta({...meta,preavis:e.target.value})}/></div>
+              </div>
+            </div>
+            <button className="btn btn-p" style={{width:'100%',justifyContent:'center',padding:'11px'}} onClick={generate} disabled={genLoad}>
+              {genLoad?'🪄 Génération en cours…':'🪄 Générer le contrat avec l\'IA'}
+            </button>
+          </div>
+
+          <div className="card cp">
+            <div style={{fontFamily:'Georgia,serif',fontSize:14,fontWeight:700,color:P.sd,marginBottom:9}}>3. Bibliothèque de clauses ({picked.length} sélectionnées)</div>
+            {[['Obligatoires',CLAUSES_LIB.obligatoire,P.s],['Recommandées',CLAUSES_LIB.recommande,P.gold],['Sensibles ⚠️',CLAUSES_LIB.sensible,P.terra]].map(([t,arr,c])=>(
+              <div key={t} style={{marginBottom:10}}>
+                <div style={{fontSize:10,fontWeight:700,color:c,letterSpacing:'.5px',textTransform:'uppercase',marginBottom:5}}>{t}</div>
+                {arr.map(cl=>(
+                  <label key={cl.id} style={{display:'flex',alignItems:'flex-start',gap:7,padding:'6px 8px',borderRadius:6,cursor:'pointer',marginBottom:2,background:picked.includes(cl.id)?'rgba(122,139,111,0.06)':'transparent'}}>
+                    <input type="checkbox" checked={picked.includes(cl.id)} onChange={()=>togglePick(cl.id)} style={{marginTop:2,accentColor:P.s}}/>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:11.5,fontWeight:600,color:'var(--tx)'}}>{cl.n}</div>
+                      <div style={{fontSize:10.5,color:'var(--txm)'}}>{cl.d}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab==='preview'&&(
+        <div>
+          {!draft&&!genLoad&&(<div className="card cp" style={{textAlign:'center',padding:50,color:'var(--txm)'}}>Aucun contrat généré pour l'instant. Retournez à <a onClick={()=>setTab('builder')} style={{color:P.s,cursor:'pointer',fontWeight:600}}>Construire</a>.</div>)}
+          {genLoad&&<div style={{padding:50,textAlign:'center'}}><div style={{width:32,height:32,margin:'0 auto 12px',borderRadius:'50%',border:`3px solid var(--bdr)`,borderTopColor:P.s,animation:'spin 1s linear infinite'}}/><div style={{color:'var(--txm)',fontSize:13}}>Rédaction en cours…</div></div>}
+          {draft&&(
+            <div>
+              <div style={{display:'flex',gap:7,marginBottom:10,flexWrap:'wrap'}}>
+                <button className="btn btn-p" onClick={()=>navigator.clipboard?.writeText(draft)}>📋 Copier</button>
+                <button className="btn btn-s" onClick={()=>{const blob=new Blob([draft],{type:'text/plain'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`contrat_${meta.four||'projet'}.txt`;a.click();}}>💾 Télécharger</button>
+                <button className="btn btn-s" onClick={generate} disabled={genLoad}>↺ Régénérer</button>
+                <button className="btn btn-g" onClick={()=>analyzeFile(draft,'mon_contrat_genere.txt')}>🔍 Faire relire par l'IA</button>
+              </div>
+              <div className="card cp" style={{maxHeight:600,overflow:'auto'}}>
+                <textarea value={draft} onChange={e=>setDraft(e.target.value)} style={{width:'100%',minHeight:520,border:'none',outline:'none',background:'transparent',fontFamily:'Georgia,serif',fontSize:13,lineHeight:1.85,color:'var(--tx)',resize:'vertical'}}/>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab==='upload'&&(
+        <div>
+          {!upFile&&!anaLoad&&(
+            <div style={{display:'flex',justifyContent:'center'}}>
+              <div className="card cp" style={{width:520,textAlign:'center',cursor:'pointer',border:`2px dashed ${drag?P.s:'var(--bdr)'}`,background:drag?'rgba(122,139,111,0.04)':'var(--card)',transition:'all .2s'}}
+                onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)}
+                onDrop={e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer?.files?.[0];if(f){const r=new FileReader();r.onload=ev=>analyzeFile(ev.target.result||'',f.name);r.readAsText(f);}}}
+                onClick={()=>fRef.current?.click()}>
+                <div style={{fontSize:42,marginBottom:12,opacity:.45}}>📑</div>
+                <div style={{fontFamily:'Georgia,serif',fontSize:17,fontWeight:700,color:P.sd,marginBottom:6}}>Déposez un contrat à analyser</div>
+                <div style={{fontSize:12,color:'var(--txm)',marginBottom:16}}>TXT · DOCX · PDF (texte) · L'IA détecte les risques, extrait les clauses, propose des recommandations</div>
+                <input ref={fRef} type="file" accept=".txt,.pdf,.docx,.doc" style={{display:'none'}} onChange={e=>{const f=e.target.files?.[0];if(f){const r=new FileReader();r.onload=ev=>analyzeFile(ev.target.result||'',f.name);r.readAsText(f);}}}/>
+                <button className="btn btn-p" onClick={e=>{e.stopPropagation();loadDemoAnalyse();}}>Analyser un contrat démo</button>
+              </div>
+            </div>
+          )}
+
+          {anaLoad&&<div style={{padding:60,textAlign:'center'}}><div style={{width:36,height:36,margin:'0 auto 14px',borderRadius:'50%',border:`3px solid var(--bdr)`,borderTopColor:P.s,animation:'spin 1s linear infinite'}}/><div style={{color:'var(--txm)',fontSize:13}}>L'IA analyse {upFile?.name}…</div><div style={{color:'var(--txm)',fontSize:11,marginTop:4}}>Détection des risques, extraction des clauses, vérification de conformité</div></div>}
+
+          {analyse&&!anaLoad&&(
+            <div>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+                <div><div style={{fontFamily:'Georgia,serif',fontSize:16,fontWeight:700,color:P.sd}}>📑 {upFile?.name}</div><div style={{fontSize:11,color:'var(--txm)'}}>{analyse.type} · {analyse.parties?.join(' / ')}</div></div>
+                <button className="btn btn-g" onClick={()=>{setUpFile(null);setAnalyse(null);}}>← Nouveau</button>
+              </div>
+
+              <div className="g4" style={{marginBottom:12}}>
+                <div className="kpi"><div className="kpi-l">Score de risque</div><div className="kpi-v" style={{color:analyse.score>60?P.terra:analyse.score>40?P.gold:P.s}}>{analyse.score}/100</div><div className="kpi-d">{analyse.score>60?'Élevé':analyse.score>40?'Modéré':'Faible'}</div></div>
+                <div className="kpi"><div className="kpi-l">Montant</div><div className="kpi-v" style={{fontSize:18}}>{analyse.montant||'—'}</div><div className="kpi-d">Engagement</div></div>
+                <div className="kpi"><div className="kpi-l">Durée</div><div className="kpi-v" style={{fontSize:18}}>{analyse.duree||'—'}</div><div className="kpi-d">Engagement temporel</div></div>
+                <div className="kpi"><div className="kpi-l">Clauses analysées</div><div className="kpi-v">{analyse.clauses?.length||0}</div><div className="kpi-d">{analyse.clauses?.filter(c=>c.niveau==='rouge').length||0} à risque</div></div>
+              </div>
+
+              <div className="card cp" style={{marginBottom:12,background:'linear-gradient(135deg,rgba(122,139,111,0.06),rgba(201,169,97,0.04))'}}>
+                <div style={{fontFamily:'Georgia,serif',fontSize:14,fontWeight:700,color:P.sd,marginBottom:6}}>📋 Synthèse exécutive</div>
+                <div style={{fontSize:12.5,color:'var(--tx)',lineHeight:1.7}}>{analyse.synthese}</div>
+              </div>
+
+              {analyse.dates&&analyse.dates.length>0&&(
+                <div className="card cp" style={{marginBottom:12}}>
+                  <div style={{fontFamily:'Georgia,serif',fontSize:14,fontWeight:700,color:P.sd,marginBottom:9}}>📅 Dates clés</div>
+                  <div className="g3" style={{gap:8}}>
+                    {analyse.dates.map((d,i)=>(
+                      <div key={i} style={{padding:'8px 11px',borderRadius:8,background:d.type==='risk'?'rgba(184,92,62,0.07)':d.type==='warn'?'rgba(201,169,97,0.07)':'var(--bg)',border:`1px solid ${d.type==='risk'?P.terra+'33':d.type==='warn'?P.gold+'33':'var(--bdr)'}`}}>
+                        <div style={{fontSize:10,color:'var(--txm)',textTransform:'uppercase',letterSpacing:'.5px'}}>{d.label}</div>
+                        <div style={{fontSize:13,fontWeight:700,color:d.type==='risk'?P.terra:d.type==='warn'?P.gold:P.s,marginTop:2}}>{d.date}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {analyse.clauses&&analyse.clauses.length>0&&(
+                <div className="card cp" style={{marginBottom:12}}>
+                  <div style={{fontFamily:'Georgia,serif',fontSize:14,fontWeight:700,color:P.sd,marginBottom:9}}>🔍 Analyse clause par clause</div>
+                  {analyse.clauses.map((c,i)=>{
+                    const col=c.niveau==='rouge'?P.terra:c.niveau==='orange'?P.gold:P.s;
+                    return (
+                      <div key={i} style={{padding:'10px 13px',marginBottom:7,borderRadius:9,borderLeft:`4px solid ${col}`,background:'var(--bg)',border:'1px solid var(--bdr)'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                          <div style={{fontWeight:700,color:P.sd,fontSize:12.5}}>{c.nom}</div>
+                          <span style={{padding:'2px 8px',borderRadius:10,background:col+'22',color:col,fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px'}}>{c.niveau==='rouge'?'🔴 Risque':c.niveau==='orange'?'🟡 Attention':'🟢 OK'}</span>
+                        </div>
+                        {c.extrait&&<div style={{fontSize:11,color:'var(--txm)',fontStyle:'italic',marginBottom:4,padding:'5px 8px',background:'var(--card2)',borderRadius:5}}>« {c.extrait} »</div>}
+                        <div style={{fontSize:11.5,color:'var(--tx)',lineHeight:1.55}}>{c.commentaire}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {analyse.manquantes&&analyse.manquantes.length>0&&(
+                <div className="card cp" style={{marginBottom:12,background:'rgba(184,92,62,0.04)',border:`1px solid ${P.terra}33`}}>
+                  <div style={{fontFamily:'Georgia,serif',fontSize:14,fontWeight:700,color:P.terra,marginBottom:7}}>⚠️ Clauses manquantes</div>
+                  <ul style={{margin:0,paddingLeft:18,fontSize:12,color:'var(--tx)',lineHeight:1.7}}>
+                    {analyse.manquantes.map((m,i)=>(<li key={i}>{m}</li>))}
+                  </ul>
+                </div>
+              )}
+
+              {analyse.recommandations&&analyse.recommandations.length>0&&(
+                <div className="card cp" style={{background:'rgba(122,139,111,0.05)',border:`1px solid ${P.s}33`}}>
+                  <div style={{fontFamily:'Georgia,serif',fontSize:14,fontWeight:700,color:P.s,marginBottom:7}}>💡 Recommandations de négociation IA</div>
+                  {analyse.recommandations.map((r,i)=>(
+                    <div key={i} style={{padding:'7px 10px',marginBottom:5,background:'var(--card)',borderRadius:7,fontSize:12,color:'var(--tx)',display:'flex',gap:8}}>
+                      <span style={{color:P.s,fontWeight:700,flexShrink:0}}>{i+1}.</span><span>{r}</span>
+                    </div>
+                  ))}
+                  <div style={{marginTop:10,display:'flex',gap:7}}>
+                    <button className="btn btn-p" onClick={()=>navigator.clipboard?.writeText(JSON.stringify(analyse,null,2))}>📋 Copier l'analyse</button>
+                    <button className="btn btn-s">📄 Exporter PDF</button>
+                    <button className="btn btn-g">✉️ Envoyer au juriste</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AnalyseCouts(){
+  const [tab,setTab]=useState('shouldcost');
+  const [matiere,setMatiere]=useState(35);
+  const [mo,setMo]=useState(28);
+  const [energie,setEnergie]=useState(12);
+  const [marge,setMarge]=useState(15);
+  const [overhead,setOverhead]=useState(10);
+  const total=matiere+mo+energie+marge+overhead;
+  const prixOffre=1280;
+  const prixCible=Math.round(prixOffre*(matiere+mo+energie+overhead+10)/total);
+
+  const PARETO=[
+    {n:'Schneider Electric',v:2840,cum:0},
+    {n:'Veolia',v:1920,cum:0},
+    {n:'Lafarge',v:1450,cum:0},
+    {n:'Dell France',v:1280,cum:0},
+    {n:'Engie',v:980,cum:0},
+    {n:'Air Liquide',v:720,cum:0},
+    {n:'Sodexo',v:540,cum:0},
+    {n:'Decathlon',v:380,cum:0},
+    {n:'Lyreco',v:240,cum:0},
+    {n:'Autres (12)',v:650,cum:0},
+  ];
+  const sumP=PARETO.reduce((a,b)=>a+b.v,0);
+  let cum=0;PARETO.forEach(p=>{cum+=p.v;p.cum=Math.round(cum/sumP*100);});
+
+  const DERIVES=[
+    {ref:'Cuivre Cu-ETP',sup:'Multi',ind:'LME Cu',var:14.2,impact:34000,statut:'⚠️ Action',recom:'Renégocier indexation 4 contrats'},
+    {ref:'Acier laminé',sup:'ArcelorMittal',ind:'MEPI',var:6.8,impact:18500,statut:'🟡 Surveiller',recom:'Veille hebdo'},
+    {ref:'Polypropylène',sup:'TotalEnergies',ind:'ICIS',var:-3.4,impact:-8200,statut:'🟢 Opportunité',recom:'Demander révision tarif'},
+    {ref:'Électricité HTA',sup:'Engie',ind:'EPEX',var:8.2,impact:55400,statut:'🔴 Critique',recom:'Audit consommation + RFQ'},
+    {ref:'Transport routier',sup:'Multi',ind:'CNR',var:2.1,impact:6700,statut:'🟢 OK',recom:'Reconduction tarifs'},
+  ];
+
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <div style={{marginBottom:14}}>
+        <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd}}>Analyse des coûts</h2>
+        <p style={{color:'var(--txm)',fontSize:13}}>Should-cost, dérives prix matières, Pareto et leviers d'économies</p>
+      </div>
+      <div className="tab-row">
+        <button className={`tab ${tab==='shouldcost'?'on':''}`} onClick={()=>setTab('shouldcost')}>🧮 Should-cost</button>
+        <button className={`tab ${tab==='derives'?'on':''}`} onClick={()=>setTab('derives')}>📈 Dérives prix matières</button>
+        <button className={`tab ${tab==='pareto'?'on':''}`} onClick={()=>setTab('pareto')}>📊 Pareto fournisseurs</button>
+        <button className={`tab ${tab==='leviers'?'on':''}`} onClick={()=>setTab('leviers')}>💡 Leviers IA</button>
+      </div>
+
+      {tab==='shouldcost'&&(
+        <div className="g2">
+          <div className="card cp">
+            <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>Décomposition d'un PC portable pro (offre Dell 1 280 €)</div>
+            {[['Matière première (composants)',matiere,setMatiere,P.s],['Main d\'œuvre',mo,setMo,P.sd],['Énergie & process',energie,setEnergie,P.gold],['Overhead / R&D',overhead,setOverhead,'#7a6b52'],['Marge fournisseur',marge,setMarge,P.terra]].map(([l,v,setter,c],i)=>(
+              <div key={i} style={{marginBottom:11}}>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:11.5,marginBottom:3}}>
+                  <span style={{color:'var(--tx)'}}>{l}</span>
+                  <span style={{fontWeight:700,color:c}}>{v}% · {Math.round(prixOffre*v/total)} €</span>
+                </div>
+                <div style={{height:8,background:'var(--bg)',borderRadius:4,overflow:'hidden',border:'1px solid var(--bdr)'}}>
+                  <div style={{height:'100%',width:(v/total*100)+'%',background:c,transition:'width .3s'}}/>
+                </div>
+                <input type="range" min="5" max="50" value={v} onChange={e=>setter(+e.target.value)} style={{width:'100%',accentColor:c,marginTop:3}}/>
+              </div>
+            ))}
+            <div style={{marginTop:14,padding:'10px 13px',background:'rgba(122,139,111,0.08)',borderRadius:9,border:`1px solid ${P.s}33`}}>
+              <div style={{fontSize:11,color:'var(--txm)',marginBottom:3}}>🎯 Prix cible IA (marge ramenée à 10%)</div>
+              <div style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.s}}>{prixCible} €</div>
+              <div style={{fontSize:11,color:'var(--txm)'}}>Marge négociation potentielle : <strong style={{color:P.s}}>{prixOffre-prixCible} € ({Math.round((prixOffre-prixCible)/prixOffre*100)}%)</strong></div>
+            </div>
+          </div>
+          <div className="card cp">
+            <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:10}}>🧊 Iceberg du coût total (TCO 4 ans)</div>
+            <div style={{position:'relative',height:280,background:'linear-gradient(to bottom,#cfe1eb 40%,#7a9bb5 40%,#3a5a7a 100%)',borderRadius:9,overflow:'hidden'}}>
+              <div style={{position:'absolute',top:'10%',left:'50%',transform:'translateX(-50%)',width:80,height:50,background:'#fafafa',border:'2px solid #888',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:P.sd,boxShadow:'0 4px 12px rgba(0,0,0,0.2)'}}>1 280 €<br/>visible</div>
+              <div style={{position:'absolute',top:'42%',left:0,right:0,borderTop:'2px dashed #fff'}}/>
+              {[['Maintenance',180,55],['Énergie 4 ans',95,68],['Support / SAV',140,78],['Recyclage fin de vie',60,88]].map(([l,v,top],i)=>(
+                <div key={i} style={{position:'absolute',top:top+'%',left:'50%',transform:'translateX(-50%)',background:'rgba(255,255,255,0.9)',borderRadius:5,padding:'3px 8px',fontSize:10,fontWeight:600,color:P.sd,whiteSpace:'nowrap'}}>{l} : {v} €</div>
+              ))}
+            </div>
+            <div style={{marginTop:11,fontSize:12,color:'var(--tx)',lineHeight:1.6}}>Coût visible : <strong>1 280 €</strong> · Coûts cachés : <strong style={{color:P.terra}}>475 €</strong> · <strong style={{color:P.sd}}>TCO réel : 1 755 € (+37%)</strong></div>
+          </div>
+        </div>
+      )}
+
+      {tab==='derives'&&(
+        <div className="card" style={{overflow:'hidden'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+            <thead><tr style={{background:'var(--bg)',borderBottom:'1px solid var(--bdr)'}}>
+              {['Référence','Fournisseur','Indice','Variation 30j','Impact €/an','Statut','Recommandation IA'].map(h=>(
+                <th key={h} style={{textAlign:'left',padding:'9px 11px',fontSize:10,fontWeight:700,color:'var(--txm)',letterSpacing:'.5px',textTransform:'uppercase'}}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>
+              {DERIVES.map((d,i)=>(
+                <tr key={i} style={{borderBottom:'1px solid var(--bdr)'}}>
+                  <td style={{padding:'10px 11px',fontWeight:600}}>{d.ref}</td>
+                  <td style={{padding:'10px 11px',color:'var(--txm)'}}>{d.sup}</td>
+                  <td style={{padding:'10px 11px',fontFamily:'monospace',fontSize:10.5,color:'var(--txm)'}}>{d.ind}</td>
+                  <td style={{padding:'10px 11px',fontFamily:'Georgia,serif',fontSize:14,fontWeight:700,color:d.var>5?P.terra:d.var>0?P.gold:P.s}}>{d.var>0?'+':''}{d.var}%</td>
+                  <td style={{padding:'10px 11px',fontWeight:700,color:d.impact>0?P.terra:P.s}}>{d.impact>0?'+':''}{d.impact.toLocaleString('fr-FR')} €</td>
+                  <td style={{padding:'10px 11px',fontSize:11}}>{d.statut}</td>
+                  <td style={{padding:'10px 11px',fontSize:11,color:'var(--tx)'}}>{d.recom}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab==='pareto'&&(
+        <div className="card cp">
+          <div style={{fontFamily:'Georgia,serif',fontSize:15,fontWeight:700,color:P.sd,marginBottom:6}}>Loi de Pareto — Concentration des dépenses fournisseurs</div>
+          <div style={{fontSize:12,color:'var(--txm)',marginBottom:14}}>Les 4 premiers fournisseurs (40%) concentrent <strong style={{color:P.s}}>{PARETO[3].cum}%</strong> des dépenses</div>
+          <div style={{height:280,position:'relative',padding:'10px 0'}}>
+            <svg width="100%" height="100%" viewBox="0 0 800 240" preserveAspectRatio="none">
+              <line x1="0" y1="48" x2="800" y2="48" stroke={P.gold} strokeDasharray="4,4" strokeWidth="1.5"/>
+              <text x="6" y="44" fill={P.gold} fontSize="10" fontWeight="700">Seuil 80%</text>
+              {PARETO.map((p,i)=>{
+                const w=80, x=i*w+5, h=p.v/PARETO[0].v*180;
+                return <g key={i}>
+                  <rect x={x} y={240-h} width={w-10} height={h} fill={i<4?P.s:P.s+'77'} rx="3"/>
+                  <text x={x+w/2-5} y={235} fill="#fff" fontSize="10" fontWeight="700" textAnchor="middle">{p.v}</text>
+                </g>;
+              })}
+              <polyline fill="none" stroke={P.sd} strokeWidth="2.5" points={PARETO.map((p,i)=>`${i*80+40},${240-p.cum*2.4}`).join(' ')}/>
+              {PARETO.map((p,i)=>(<circle key={i} cx={i*80+40} cy={240-p.cum*2.4} r="4" fill={P.sd}/>))}
+              {PARETO.map((p,i)=>(<text key={i} x={i*80+40} y={240-p.cum*2.4-8} fill={P.sd} fontSize="10" fontWeight="700" textAnchor="middle">{p.cum}%</text>))}
+            </svg>
+          </div>
+          <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:8}}>
+            {PARETO.map((p,i)=>(<span key={i} style={{fontSize:10,padding:'3px 7px',background:'var(--bg)',borderRadius:4,color:'var(--txm)'}}>{p.n}</span>))}
+          </div>
+          <div style={{marginTop:14,padding:'10px 13px',background:'rgba(122,139,111,0.07)',borderRadius:9,border:`1px solid ${P.s}33`,fontSize:12,color:'var(--tx)',lineHeight:1.6}}>
+            <strong style={{color:P.sd}}>📌 Lecture IA :</strong> 4 fournisseurs (40%) font 71% des dépenses → concentrer les efforts de négociation sur ce noyau. Gain potentiel estimé : <strong style={{color:P.s}}>2 à 4% du spend</strong>, soit 150-300 k€/an.
+          </div>
+        </div>
+      )}
+
+      {tab==='leviers'&&(
+        <div>
+          {[
+            {t:'Consolidation fournisseurs MRO',e:24500,c:'87%',d:'Regrouper 8 fournisseurs MRO en 2-3 contrats-cadres. Volume agrégé > 200 k€/an.'},
+            {t:'Renégociation indexation cuivre',e:18200,c:'92%',d:'4 contrats avec indexation cuivre obsolète. Bascule vers indice révisé trimestriel.'},
+            {t:'Should-cost teardown PC portable',e:12800,c:'78%',d:'Marge fournisseur estimée à 15% vs 10% standard marché. Levier de négociation Dell/HP.'},
+            {t:'Substitution matière (acier→alu)',e:9400,c:'64%',d:'Étude de substitution sur 3 références. Gain technique + baisse 12% du coût matière.'},
+            {t:'Mutualisation transport multi-sites',e:7200,c:'81%',d:'3 sites lyonnais utilisent 3 transporteurs distincts. Appel d\'offres mutualisé.'},
+          ].map((l,i)=>(
+            <div key={i} className="card card-hover cp" style={{marginBottom:9}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12}}>
+                <div style={{flex:1}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                    <div style={{fontFamily:'Georgia,serif',fontSize:14.5,fontWeight:700,color:P.sd}}>{l.t}</div>
+                    <span className="badge b-sage">Confiance IA {l.c}</span>
+                  </div>
+                  <div style={{fontSize:12,color:'var(--tx)',lineHeight:1.6}}>{l.d}</div>
+                </div>
+                <div style={{textAlign:'right',flexShrink:0}}>
+                  <div style={{fontSize:10,color:'var(--txm)',textTransform:'uppercase',letterSpacing:'.5px'}}>Économie estimée</div>
+                  <div style={{fontFamily:'Georgia,serif',fontSize:20,fontWeight:700,color:P.s}}>{l.e.toLocaleString('fr-FR')} €</div>
+                  <button className="btn btn-p" style={{fontSize:11,marginTop:6}}>Lancer le chantier</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Simple({title,sub,icon}){
+  return (
+    <div className="fi" style={{padding:'24px 28px'}}>
+      <div style={{fontSize:26,marginBottom:7}}>{icon}</div>
+      <h2 style={{fontFamily:'Georgia,serif',fontSize:22,fontWeight:700,color:P.sd,marginBottom:3}}>{title}</h2>
+      <p style={{color:'var(--txm)',fontSize:13,marginBottom:18}}>{sub}</p>
+      <div className="card cp" style={{color:'var(--txm)',fontSize:13,textAlign:'center',padding:40}}>Module en cours de déploiement — disponible dans la prochaine version.</div>
+    </div>
+  );
+}
+
+// ── IA Panel ─────────────────────────────────────────────────
+function IaPanel({open,onClose,mod}){
+  const [msgs,setMsgs]=useState(IA_DEMO);const [inp,setInp]=useState('');const [load,setLoad]=useState(false);const bottom=useRef();
+  useEffect(()=>{bottom.current?.scrollIntoView({behavior:'smooth'});},[msgs]);
+  const SUGG={
+    dashboard:['Résumer ma semaine achats','Actions prioritaires aujourd\'hui ?','Analyser mes dépenses Q1'],
+    contrats:['Clauses à risque ?','Extraire les dates clés','Comparer avec contrat-type'],
+    sourcing:['Fournisseurs alternatifs','Qualifier ce fournisseur','Préparer un RFI'],
+  }[mod]||['Aide-moi sur ce module','Voir les prompts disponibles','Générer un rapport'];
+  const send=async()=>{
+    if(!inp.trim()||load) return;
+    const u=inp.trim();setInp('');setMsgs(m=>[...m,{role:'user',text:u}]);setLoad(true);
+    try{const t=await window.claude.complete({messages:[{role:'user',content:`Assistant AchatPro, expert achats. Module: ${mod}. Question: ${u}. Réponds en français, concis, max 100 mots.`}]});setMsgs(m=>[...m,{role:'ai',text:t}]);}
+    catch(e){setMsgs(m=>[...m,{role:'ai',text:'Erreur de connexion.'}]);}
+    setLoad(false);
+  };
+  return (
+    <div className={`ia-panel ${open?'':'shut'}`}>
+      {open&&<>
+        <div className="ia-hdr">
+          <div style={{width:28,height:28,borderRadius:7,background:'rgba(122,139,111,0.1)',display:'flex',alignItems:'center',justifyContent:'center'}}><Leaf size={15}/></div>
+          <div style={{flex:1}}><div style={{fontSize:12.5,fontWeight:700,color:P.sd}}>Assistant AchatPro</div><div style={{display:'flex',alignItems:'center',gap:4,fontSize:10,color:'var(--txm)'}}><span style={{width:5,height:5,borderRadius:'50%',background:'#22c55e',display:'inline-block'}}/>En ligne</div></div>
+          <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',color:'var(--txm)',fontSize:17,borderRadius:5,padding:'2px 5px'}}>×</button>
+        </div>
+        <div className="ia-msgs">
+          {msgs.map((m,i)=><div key={i} style={{alignSelf:m.role==='user'?'flex-end':'flex-start',maxWidth:'90%'}}><div className={`bub ${m.role==='user'?'bub-u':'bub-ai'}`}>{m.text}</div></div>)}
+          {load&&<div style={{alignSelf:'flex-start'}}><div className="bub bub-ai" style={{color:'var(--txm)',fontSize:11}}>● ● ●</div></div>}
+          <div ref={bottom}/>
+        </div>
+        <div className="ia-sug">
+          <div className="ia-sug-lbl">Suggestions</div>
+          {SUGG.map((s,i)=><button key={i} className="sugg" onClick={()=>setInp(s)}>{s}</button>)}
+        </div>
+        <div className="ia-inp-row">
+          <input className="ia-inp" placeholder="Posez votre question…" value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()}/>
+          <button className="ia-send" onClick={send}>→</button>
+        </div>
+      </>}
+    </div>
+  );
+}
+
+// ── App ───────────────────────────────────────────────────────
+const NAV=[
+  {sec:'Pilotage',items:[{id:'dashboard',e:'🏠',l:'Tableau de bord'}]},
+  {sec:'Opérations',items:[{id:'processus',e:'🧭',l:'Processus A→Z'},{id:'email',e:'✉️',l:'Assistant Emails IA'},{id:'comparateur',e:'📊',l:'Comparateur d\'offres'},{id:'sourcing',e:'🔍',l:'Sourcing fournisseurs'},{id:'workflows',e:'✅',l:'Workflows approbation'}]},
+  {sec:'Analyse',items:[{id:'dashboards',e:'📊',l:'Dashboards & Reporting'},{id:'tco',e:'💰',l:'Calculateur TCO'},{id:'couts',e:'📉',l:'Analyse des coûts'},{id:'eval',e:'🤝',l:'Évaluation fournisseurs'}]},
+  {sec:'Contractuel',items:[{id:'contrats',e:'📑',l:'Analyse de contrats'},{id:'redaction',e:'✍️',l:'Rédaction contrats'}]},
+  {sec:'Risques & Conformité',items:[{id:'risques',e:'🛡️',l:'Gestion des risques'},{id:'rse',e:'🌱',l:'RSE / ESG / Conformité'}]},
+  {sec:'Configuration',items:[{id:'integrations',e:'🔗',l:'Intégrations'},{id:'knowledge',e:'📚',l:'Base de connaissances'},{id:'prompts',e:'🪄',l:'Prompts Library'}]},
+];
+const ALL_ITEMS=NAV.flatMap(s=>s.items);
+const MOD_LABEL=Object.fromEntries(ALL_ITEMS.map(i=>[i.id,i.l]));
+const MOD_SEC={}; NAV.forEach(s=>s.items.forEach(i=>{MOD_SEC[i.id]=s.sec;}));
+
+function App(){
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "ambiance": "aube",
+    "density": "cosy",
+    "perso": "botanique"
+  }/*EDITMODE-END*/;
+  const [t,setTweak]=useTweaks(TWEAK_DEFAULTS);
+  const [mod,setMod]=useState('dashboard');
+  const [dark,setDark]=useState(false);
+  const [ia,setIa]=useState(false);
+
+  useEffect(()=>{
+    const root=document.documentElement;
+    root.setAttribute('data-ambiance',t.ambiance);
+    root.setAttribute('data-density',t.density);
+    root.setAttribute('data-perso',t.perso);
+  },[t.ambiance,t.density,t.perso]);
+
+  const render=()=>{
+    switch(mod){
+      case 'dashboard': return <Dashboard/>;
+      case 'processus': return <ProcessusAZ/>;
+      case 'email': return <EmailModule/>;
+      case 'sourcing': return <Sourcing/>;
+      case 'workflows': return <Workflows/>;
+      case 'comparateur': return <Comparateur/>;
+      case 'dashboards': return <Dashboards/>;
+      case 'tco': return <TcoModule/>;
+      case 'contrats': return <AnalyseContrats/>;
+      case 'eval': return <EvalFournisseurs/>;
+      case 'risques': return <Risques/>;
+      case 'rse': return <Rse/>;
+      case 'prompts': return <PromptsLibrary/>;
+      case 'couts': return <AnalyseCouts/>;
+      case 'redaction': return <RedactionContrats/>;
+      case 'integrations': return <Simple title="Intégrations" sub="Connectez AchatPro à votre ERP, SAP, DocuSign et outils métiers" icon="🔗"/>;
+      case 'knowledge': return <Simple title="Base de connaissances" sub="Glossaire, procédures, modèles et micro-formations" icon="📚"/>;
+      default: return <Dashboard/>;
+    }
+  };
+
+  return (
+    <div className={dark?'dark':''} style={{display:'flex',width:'100%',height:'100vh',overflow:'hidden',background:'var(--bg)'}}>
+      {/* Sidebar */}
+      <div className="sidebar">
+        <div className="sidebar-logo">
+          <Leaf size={28}/>
+          <div><div className="logo-text">AchatPro</div><div className="logo-sub">Copilote IA Achats</div></div>
+        </div>
+        <div className="snav">
+          {NAV.map(s=>(
+            <div key={s.sec}>
+              <div className="sec-lbl">{s.sec}</div>
+              {s.items.map(item=>(
+                <button key={item.id} className={`ni ${mod===item.id?'active':''} ${item.id==='prompts'?'ni-prompts':''}`} onClick={()=>setMod(item.id)}>
+                  <span style={{fontSize:14,flexShrink:0,width:18,textAlign:'center'}}>{item.e}</span>{item.l}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="sfooter">
+          <div className="ucard">
+            <div className="avatar">MO</div>
+            <div><div className="uname">Mélanie Oudoire</div><div className="urole">Responsable Achats</div></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div className="main-area">
+        <div className="topbar">
+          <div className="breadcrumb">
+            <span>{MOD_SEC[mod]}</span><span style={{opacity:.35}}>›</span><strong>{MOD_LABEL[mod]}</strong>
+          </div>
+          <div className="tsearch">
+            <span style={{fontSize:13,opacity:.45}}>🔍</span>
+            <input placeholder="Rechercher ou demander à l'IA…"/>
+          </div>
+          <div style={{display:'flex',gap:7}}>
+            <div className="tbtn" style={{position:'relative'}}>🔔<div style={{position:'absolute',top:5,right:5,width:7,height:7,borderRadius:'50%',background:P.terra,border:'2px solid var(--card)'}}/></div>
+            <button className="tbtn" onClick={()=>setDark(!dark)}>{dark?'☀️':'🌙'}</button>
+            <button className="tbtn" onClick={()=>setIa(!ia)} style={{color:ia?P.s:'var(--txm)',borderColor:ia?P.s:'var(--bdr)'}}>
+              <Leaf size={15} color={ia?P.s:undefined}/>
+            </button>
+          </div>
+        </div>
+        <div className="content-area">
+          <div className="content">{render()}</div>
+          <IaPanel open={ia} onClose={()=>setIa(false)} mod={mod}/>
+        </div>
+      </div>
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Ambiance" subtitle="L'humeur visuelle de l'interface">
+          <TweakRadio label="Palette" value={t.ambiance} onChange={v=>setTweak('ambiance',v)} options={[
+            {value:'terre',label:'Terre'},
+            {value:'aube',label:'Aube'},
+            {value:'ardoise',label:'Ardoise'},
+            {value:'encre',label:'Encre'},
+          ]}/>
+        </TweakSection>
+        <TweakSection title="Densité" subtitle="Compact pour data-people, spacieux pour la lecture">
+          <TweakRadio label="Espacement" value={t.density} onChange={v=>setTweak('density',v)} options={[
+            {value:'compact',label:'Compact'},
+            {value:'cosy',label:'Confort'},
+            {value:'airy',label:'Spacieux'},
+          ]}/>
+        </TweakSection>
+        <TweakSection title="Personnalité" subtitle="Le caractère typographique">
+          <TweakRadio label="Style" value={t.perso} onChange={v=>setTweak('perso',v)} options={[
+            {value:'botanique',label:'Botanique'},
+            {value:'editorial',label:'Editorial'},
+            {value:'tech',label:'Tech'},
+          ]}/>
+        </TweakSection>
+      </TweaksPanel>
+
+      {!ia&&<button className="fab" onClick={()=>setIa(true)} title="Assistant IA"><Leaf size={18} color="#fff"/></button>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
